@@ -17,24 +17,20 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # Navigate to the project folder
-            # NOTE: Please update this directory to match exactly where your project is on the VPS!
-            # Example paths where it might be:
-            cd ~/edu.sfxsai.com || cd /var/www/edu.sfxsai.com || cd /root/edu.sfxsai.com || echo "Please set the exact path in .github/workflows/deploy.yml"
+            # Create a temporary directory to clone the repo
+            cd /tmp
+            rm -rf stfrancis_deploy_tmp
+            git clone https://github.com/MABDC-admin/edu.sfxsai.com.git stfrancis_deploy_tmp
             
-            # Pull the latest changes
-            git pull origin main
+            # Copy the updated files to the actual project directory
+            cp -r stfrancis_deploy_tmp/* /opt/stfrancis-angular/
             
-            # Rebuild and restart the frontend
-            cd sms-angular-dashboard-starter
-            npm install
-            npm run build
-            cd ..
+            # Navigate to the project directory
+            cd /opt/stfrancis-angular
             
-            # Rebuild and restart the backend
-            cd sms-nestjs-backend
-            npm install
-            npm run build
+            # Rebuild and restart the Docker containers
+            docker compose -f docker-compose.vps.yml build
+            docker compose -f docker-compose.vps.yml up -d
             
-            # IMPORTANT: Change this to your actual PM2 restart command or Docker restart command
-            pm2 restart all || echo "PM2 restart failed or skipped"
+            # Clean up the temporary folder
+            rm -rf /tmp/stfrancis_deploy_tmp
