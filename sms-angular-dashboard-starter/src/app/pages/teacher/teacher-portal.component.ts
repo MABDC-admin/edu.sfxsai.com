@@ -253,6 +253,9 @@ export class TeacherPortalComponent implements OnInit {
     ].filter(Boolean).join(' • ');
   });
   readonly teacherInitials = computed(() => this.buildTeacherInitials(this.state().teacher.name, this.state().teacher.email));
+  readonly isSavingDll = signal(false);
+  readonly showDllModal = signal(false);
+
   readonly dashboardSummary = computed(() =>
     buildTeacherDashboardSummary(this.state().classes, this.state().attendance, this.state().grades, this.attendanceDate()),
   );
@@ -835,9 +838,18 @@ export class TeacherPortalComponent implements OnInit {
       return;
     }
 
-    this.teacherStore.addDll({ classId: section.id, date: this.attendanceDate(), ...form });
-    this.dllForm = { objectives: '', activities: '', materials: '', remarks: '' };
-    this.showToast('success', 'Daily Lesson Log saved.');
+    this.isSavingDll.set(true);
+    this.teacherStore.addDll({ classId: section.id, date: this.attendanceDate(), ...form }).subscribe({
+      next: () => {
+        this.dllForm = { objectives: '', activities: '', materials: '', remarks: '' };
+        this.isSavingDll.set(false);
+        this.showToast('success', 'Daily Lesson Log saved.');
+      },
+      error: () => {
+        this.isSavingDll.set(false);
+        this.showToast('error', 'Failed to save Daily Lesson Log. Please try again.');
+      }
+    });
   }
 
   addAnnouncement() {

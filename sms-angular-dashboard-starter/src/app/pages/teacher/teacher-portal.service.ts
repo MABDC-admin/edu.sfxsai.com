@@ -73,7 +73,9 @@ export class TeacherPortalService {
   }
 
   addDll(entry: Omit<DailyLessonLog, 'id'>) {
-    this.mutate('post', 'dlls', entry);
+    return this.http.post<TeacherPortalState>(`${this.apiUrl}/dlls`, entry).pipe(
+      tap(state => this.stateSubject.next(this.normalizeState(state, this.snapshot())))
+    );
   }
 
   deleteDll(id: string) {
