@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { CalendarService } from '../../core/services/calendar.service';
 import { CalendarEvent } from '../../core/models/registrar.models';
 import { RegistrarApiService } from '../../core/services/registrar-api.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-calendar-page',
@@ -16,6 +17,7 @@ export class CalendarPageComponent implements OnInit {
   private calendarService = inject(CalendarService);
   private api = inject(RegistrarApiService);
   private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
 
   currentDate = new Date();
   daysInMonth: Date[] = [];
@@ -24,6 +26,7 @@ export class CalendarPageComponent implements OnInit {
   eventForm!: FormGroup;
   editingEventId: string | null = null;
   selectedDate: Date | null = null;
+  canEdit = false;
 
   eventTypes = [
     { type: 'Holiday', color: '#ef4444' }, // red
@@ -33,6 +36,8 @@ export class CalendarPageComponent implements OnInit {
   ];
 
   ngOnInit() {
+    const role = this.authService.getUserRole();
+    this.canEdit = ['ADMIN', 'REGISTRAR', 'PRINCIPAL'].includes(role || '');
     this.initForm();
     this.generateCalendar();
     this.loadEvents();
@@ -109,6 +114,7 @@ export class CalendarPageComponent implements OnInit {
   }
 
   openModal(date?: Date, event?: CalendarEvent) {
+    if (!this.canEdit && !event) return; // Prevent creating new events
     this.showModal = true;
     if (event) {
       this.editingEventId = event.id || null;
@@ -125,6 +131,12 @@ export class CalendarPageComponent implements OnInit {
         eventType: 'Other',
         eventDate: date ? date.toISOString().split('T')[0] : ''
       });
+    }
+    
+    if (!this.canEdit) {
+      this.eventForm.disable();
+    } else {
+      this.eventForm.enable();
     }
   }
 

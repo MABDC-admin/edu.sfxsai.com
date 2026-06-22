@@ -11,44 +11,39 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var AiController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AiController = void 0;
 const common_1 = require("@nestjs/common");
 const roles_decorator_1 = require("../auth/roles.decorator");
 const ai_service_1 = require("./ai.service");
-let AiController = AiController_1 = class AiController {
+let AiController = class AiController {
     aiService;
     constructor(aiService) {
         this.aiService = aiService;
     }
-    logger = new common_1.Logger(AiController_1.name);
     chat(body, req) {
         return this.aiService.chat(req.user, body);
+    }
+    generateImage(body, req) {
+        return this.aiService.generateImage(req.user, body);
     }
     async chatStream(body, req, res) {
         res.status(200);
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         res.setHeader('Cache-Control', 'no-cache, no-transform');
         res.setHeader('X-Accel-Buffering', 'no');
-        let hasWrittenToken = false;
+        res.flushHeaders?.();
         try {
-            await this.aiService.streamChat(req.user, body, (token) => {
-                hasWrittenToken = true;
-                res.write(token);
-            });
+            await this.aiService.streamChat(req.user, body, (token) => res.write(token));
             res.end();
         }
-        catch (error) {
-            this.logger.error(error instanceof Error ? `AI stream failed: ${error.message}` : 'AI stream failed with an unknown error');
-            if (!res.headersSent && !hasWrittenToken) {
+        catch {
+            if (!res.headersSent) {
                 res.status(503).json({ message: 'AI assistant stream is temporarily unavailable.' });
                 return;
             }
-            if (!res.writableEnded) {
-                res.write('\n\nAI assistant stream was interrupted. Please try again.');
-                res.end();
-            }
+            res.write('\n\nAI assistant stream was interrupted. Please try again.');
+            res.end();
         }
     }
 };
@@ -62,6 +57,14 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AiController.prototype, "chat", null);
 __decorate([
+    (0, common_1.Post)('image'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", void 0)
+], AiController.prototype, "generateImage", null);
+__decorate([
     (0, common_1.Post)('chat/stream'),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
@@ -70,7 +73,7 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], AiController.prototype, "chatStream", null);
-exports.AiController = AiController = AiController_1 = __decorate([
+exports.AiController = AiController = __decorate([
     (0, common_1.Controller)('ai'),
     (0, roles_decorator_1.Roles)('ADMIN', 'REGISTRAR', 'FINANCE', 'PRINCIPAL', 'TEACHER'),
     __metadata("design:paramtypes", [ai_service_1.AiService])

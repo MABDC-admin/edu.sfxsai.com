@@ -139,6 +139,19 @@
             aria-label="Choose custom portal color"
           />
         </label>
+        
+        <label class="custom-theme-row">
+          <span class="custom-theme-copy">
+            <strong>Sidebar color</strong>
+            <small>Set custom side navigation background</small>
+          </span>
+          <input
+            type="color"
+            [ngModel]="customSidebarColor"
+            (ngModelChange)="onCustomSidebarColorChange($event)"
+            aria-label="Choose custom sidebar background color"
+          />
+        </label>
       </div>
     </div>
 

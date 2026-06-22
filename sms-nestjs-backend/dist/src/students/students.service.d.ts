@@ -204,6 +204,47 @@ export declare class StudentsService {
         photoUrl: string | null;
         enrollmentSubmittedAt: string | null;
     }>;
+    approveEnrollment(id: string, data?: Record<string, unknown>): Promise<{
+        user: {
+            id: string;
+        } | null;
+        users: {
+            id: string;
+        }[];
+        id: string;
+        studentNo: string;
+        lrn: string;
+        firstName: string;
+        middleName: string | null;
+        lastName: string;
+        suffix: string | null;
+        birthdate: string | null;
+        gender: string | null;
+        motherTongue: string | null;
+        dialect: string | null;
+        gradeLevel: string;
+        section: string | null;
+        adviser: string | null;
+        studentType: string;
+        enrollmentStatus: string;
+        documentStatus: string;
+        financeStatus: string;
+        guardian: string | null;
+        contactNo: string | null;
+        address: string | null;
+        motherName: string | null;
+        motherContact: string | null;
+        fatherName: string | null;
+        fatherContact: string | null;
+        phAddress: string | null;
+        uaeAddress: string | null;
+        previousSchool: string | null;
+        lastUpdated: string;
+        academicYearId: string | null;
+        photoFileId: string | null;
+        photoUrl: string | null;
+        enrollmentSubmittedAt: string | null;
+    }>;
     disableStudent(id: string, data: Record<string, unknown>): Promise<{
         user: null;
         users: never[];

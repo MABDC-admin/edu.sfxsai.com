@@ -145,6 +145,7 @@ export class TopbarComponent implements OnInit {
   readonly portalThemes = PORTAL_THEMES;
   readonly selectedThemeId = signal(PORTAL_THEMES[0].id);
   customThemeColor = PORTAL_THEMES[0].primary;
+  customSidebarColor = PORTAL_THEMES[0].soft;
   readonly activeTheme = computed(() => {
     if (this.selectedThemeId() === 'custom') {
       return this.buildCustomTheme(this.customThemeColor);
@@ -325,6 +326,14 @@ export class TopbarComponent implements OnInit {
     this.persistPortalThemePreference();
   }
 
+  onCustomSidebarColorChange(color: string): void {
+    const normalizedColor = this.normalizeHexColor(color);
+    if (!normalizedColor) return;
+    this.customSidebarColor = normalizedColor;
+    this.applySidebarColor(this.customSidebarColor);
+    this.persistPortalThemePreference();
+  }
+
   activeThemeGradient(): string {
     const theme = this.activeTheme();
     return `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`;
@@ -445,8 +454,17 @@ export class TopbarComponent implements OnInit {
       this.customThemeColor = theme.primary;
       this.selectedThemeId.set(theme.id);
       this.applyPortalTheme(theme);
+      
+      const storedSidebarColor = this.normalizeHexColor(parsed?.sidebarColor);
+      if (storedSidebarColor) {
+        this.customSidebarColor = storedSidebarColor;
+      } else {
+        this.customSidebarColor = storedThemeId === 'custom' ? this.buildCustomTheme(storedCustomColor).soft : theme.soft;
+      }
+      this.applySidebarColor(this.customSidebarColor);
     } catch {
       this.applyPortalTheme(PORTAL_THEMES[0]);
+      this.applySidebarColor(PORTAL_THEMES[0].soft);
     }
   }
 
@@ -455,6 +473,7 @@ export class TopbarComponent implements OnInit {
       localStorage.setItem(this.themeStorageKey, JSON.stringify({
         themeId: this.selectedThemeId(),
         customColor: this.customThemeColor,
+        sidebarColor: this.customSidebarColor,
       }));
     } catch {
       // Theme selection should not block the portal.
@@ -478,6 +497,12 @@ export class TopbarComponent implements OnInit {
     root.style.setProperty('--sms-theme-gradient', `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`);
     root.style.setProperty('--sms-theme-hero-gradient', `linear-gradient(135deg, ${theme.primaryDark}, ${theme.secondaryDark})`);
     root.style.setProperty('--sms-theme-shadow', this.hexToShadow(theme.primary));
+  }
+
+  private applySidebarColor(color: string): void {
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.setProperty('--sms-sidebar-bg', color);
+    }
   }
 
   private buildCustomTheme(primary: string): PortalTheme {

@@ -12,7 +12,7 @@ assert.match(component, /calendarService\.getEvents\(academicYearId\)\.pipe\(/);
 assert.match(component, /switchMap\(events =>\s*events\.length \? of\(events\) : this\.calendarService\.getEvents\(\)\.pipe\(catchError/);
 assert.match(component, /upcomingCalendarEvents\(events\)/);
 
-assert.match(template, /Upcoming Events & Holidays/);
+assert.match(template, /School Calendar/);
 assert.match(template, /routerLink="\/principal\/calendar"/);
 assert.match(template, /\*ngFor="let event of calendarEvents\(\)\.slice\(0, 5\)"/);
 assert.match(template, /\[style\.background\]="event\.color \|\| '#3b82f6'"/);

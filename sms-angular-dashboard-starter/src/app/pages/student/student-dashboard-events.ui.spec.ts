@@ -14,7 +14,7 @@ assert.match(component, /activeAcademicYear\$/);
 assert.match(component, /calendarService\.getEvents\(ay\.id\)/);
 assert.match(component, /events\.length \? of\(events\) : this\.calendarService\.getEvents\(\)/);
 
-assert.match(template, /Upcoming Events & Holidays/);
+assert.match(template, /School Calendar/);
 assert.match(template, /routerLink="\/student\/calendar"/);
 assert.match(template, /\*ngFor="let event of calendarEvents\(\)"/);
 assert.match(template, /eventIcon\(event\.eventType\)/);

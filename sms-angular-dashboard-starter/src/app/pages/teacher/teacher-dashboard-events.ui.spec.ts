@@ -20,7 +20,7 @@ assert.match(template, /\[src\]="state\(\)\.teacher\.avatarUrl"/);
 assert.match(template, /teacherInitials\(\)/);
 assert.match(styles, /\.teacher-hero-avatar\s*\{[\s\S]*?width:\s*clamp\(8\.125rem,\s*10\.4vw,\s*8\.75rem\);[\s\S]*?height:\s*clamp\(8\.125rem,\s*10\.4vw,\s*8\.75rem\);/);
 assert.match(styles, /@media\s*\(max-width:\s*760px\)[\s\S]*?\.teacher-hero-avatar\s*\{[\s\S]*?width:\s*7\.15rem;[\s\S]*?height:\s*7\.15rem;/);
-assert.match(template, /Upcoming Events & Holidays/);
+assert.match(template, /School Calendar/);
 assert.match(template, /routerLink="\/teacher\/calendar"/);
 assert.match(template, /\*ngFor="let event of calendarEvents\(\)"/);
 assert.doesNotMatch(template, /<p class="eyebrow">Announcements<\/p>\s*<h2>Class Updates<\/h2>/);

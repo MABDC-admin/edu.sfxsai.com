@@ -51,6 +51,7 @@ const drizzle_service_1 = require("../drizzle/drizzle.service");
 const schema = __importStar(require("../drizzle/schema"));
 const standard_sections_util_1 = require("../sections/standard-sections.util");
 const DEFAULT_STUDENT_PASSWORD = 'ChangeMe123!';
+const DEFAULT_APPROVAL_SECTION = 'SFXSAI';
 function toNumber(value) {
     if (typeof value === 'number')
         return value;
@@ -199,6 +200,49 @@ let StudentsService = class StudentsService {
             user: currentUser,
             users: currentUser ? [currentUser] : [],
         };
+    }
+    async approveEnrollment(id, data = {}) {
+        const student = await this.drizzle.db.query.student.findFirst({
+            where: (0, drizzle_orm_1.eq)(schema.student.id, id),
+            with: { users: true },
+        });
+        if (!student) {
+            throw new common_1.BadRequestException('Student was not found.');
+        }
+        const gradeLevel = (0, standard_sections_util_1.normalizeStandardGradeLevel)(student.gradeLevel);
+        const requestedCampus = String(data.campus ?? DEFAULT_APPROVAL_SECTION).trim().toUpperCase();
+        const targetCampus = requestedCampus === 'MABDC' ? 'MABDC' : DEFAULT_APPROVAL_SECTION;
+        let targetSectionName = String(student.section ?? '').trim();
+        let targetSection = null;
+        if (!targetSectionName && gradeLevel && student.academicYearId) {
+            targetSection = await this.drizzle.db.query.section.findFirst({
+                where: (0, drizzle_orm_1.and)((0, drizzle_orm_1.eq)(schema.section.academicYearId, student.academicYearId), (0, drizzle_orm_1.eq)(schema.section.gradeLevel, gradeLevel), (0, drizzle_orm_1.eq)(schema.section.sectionName, targetCampus)),
+            });
+            if (targetSection && (targetSection.availableSlots ?? 0) > 0) {
+                targetSectionName = targetSection.sectionName;
+            }
+        }
+        const approved = await this.update(id, {
+            enrollmentStatus: 'Officially Enrolled',
+            documentStatus: 'Complete',
+            gradeLevel,
+            ...(targetSectionName ? { section: targetSectionName } : {}),
+        });
+        if (targetSection && targetSectionName) {
+            const nextEnrolled = (targetSection.enrolled ?? 0) + 1;
+            const nextAvailableSlots = Math.max((targetSection.capacity ?? 0) - nextEnrolled, 0);
+            const nextStatus = nextAvailableSlots <= 0 ? 'Closed' : nextAvailableSlots <= 5 ? 'Nearly Full' : 'Open';
+            await this.drizzle.db
+                .update(schema.section)
+                .set({
+                enrolled: nextEnrolled,
+                availableSlots: nextAvailableSlots,
+                status: nextStatus,
+            })
+                .where((0, drizzle_orm_1.eq)(schema.section.id, targetSection.id))
+                .returning();
+        }
+        return approved;
     }
     async disableStudent(id, data) {
         const student = await this.drizzle.db.query.student.findFirst({

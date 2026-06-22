@@ -19,8 +19,9 @@ const ai_tool_context_service_1 = require("./ai-tool-context.service");
 let AiService = class AiService {
     static { AiService_1 = this; }
     toolContext;
-    static OPENROUTER_MODEL = 'deepseek/deepseek-v4-flash';
-    static OPENROUTER_COMPARISON_MODEL = 'google/gemini-2.5-flash-lite-preview-09-2025';
+    static OPENROUTER_MODEL = 'google/gemini-2.5-flash-lite-preview-09-2025';
+    static OPENROUTER_COMPARISON_MODEL = 'deepseek/deepseek-v4-flash';
+    static OPENROUTER_IMAGE_MODEL = 'x-ai/grok-imagine-image-quality';
     logger = new common_1.Logger(AiService_1.name);
     constructor(toolContext) {
         this.toolContext = toolContext;
@@ -172,6 +173,53 @@ Do not include any greeting or conversational filler. Output only the 3 bullet p
             return 'Unable to generate AI insights at this time. Please check your network connection or try again later.';
         }
     }
+    async generateImage(user, request) {
+        const prompt = `${request?.prompt || ''}`.trim();
+        if (!prompt) {
+            throw new common_1.BadRequestException('Image prompt is required.');
+        }
+        const aspectRatio = this.normalizeImageAspectRatio(request?.aspectRatio);
+        const imageSize = this.normalizeImageSize(request?.imageSize);
+        const apiKey = this.requireApiKey();
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: this.openRouterHeaders(apiKey),
+            body: JSON.stringify({
+                model: AiService_1.OPENROUTER_IMAGE_MODEL,
+                messages: [
+                    {
+                        role: 'system',
+                        content: `You generate safe, school-appropriate classroom visuals for SFXSAI staff. The signed-in user is ${user.email || 'a staff member'} with role ${user.role || 'STAFF'}. Avoid private student data, faces of real minors, copyrighted characters, or explicit content.`,
+                    },
+                    {
+                        role: 'user',
+                        content: prompt,
+                    },
+                ],
+                modalities: ['image'],
+                image_config: {
+                    aspect_ratio: aspectRatio,
+                    image_size: imageSize,
+                },
+            }),
+            signal: AbortSignal.timeout(90000),
+        });
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => '');
+            this.logger.error(`OpenRouter image error ${response.status}: ${errorText.slice(0, 500)}`);
+            throw new common_1.ServiceUnavailableException('Image generation could not reach the model provider. Please try again.');
+        }
+        const data = await response.json();
+        const images = this.extractGeneratedImages(data, prompt);
+        if (!images.length) {
+            throw new common_1.ServiceUnavailableException('Image generation returned no image.');
+        }
+        return {
+            model: AiService_1.OPENROUTER_IMAGE_MODEL,
+            prompt,
+            images,
+        };
+    }
     async getStudentAcademicInsights(profileData) {
         const apiKey = process.env.OPENROUTER_API_KEY;
         if (!apiKey) {
@@ -269,6 +317,25 @@ When using an AI TOOL RESULT:
             }
             return { role, content };
         });
+    }
+    normalizeImageAspectRatio(value) {
+        const allowed = new Set(['1:1', '16:9', '9:16', '4:3', '3:4', '3:2', '2:3']);
+        return allowed.has(`${value || ''}`) ? `${value}` : '1:1';
+    }
+    normalizeImageSize(value) {
+        const allowed = new Set(['1K', '2K']);
+        return allowed.has(`${value || ''}`) ? `${value}` : '1K';
+    }
+    extractGeneratedImages(data, prompt) {
+        const message = data?.choices?.[0]?.message;
+        const rawImages = Array.isArray(message?.images) ? message.images : [];
+        return rawImages
+            .map((image) => image?.imageUrl?.url || image?.image_url?.url || image?.url || '')
+            .filter((url) => typeof url === 'string' && !!url.trim())
+            .map((url, index) => ({
+            url,
+            alt: `Generated classroom image ${index + 1}: ${prompt.slice(0, 80)}`,
+        }));
     }
     systemPrompt(user) {
         return `You are an elite AI assistant inside the school management system for St Francis Xavier Smart Academy Inc (SFXSAI): intelligent, thorough, practical, resourceful, and teacher-focused.

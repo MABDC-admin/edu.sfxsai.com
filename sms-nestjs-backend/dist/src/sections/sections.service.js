@@ -195,7 +195,7 @@ let SectionsService = class SectionsService {
         if (studentIds.length > 0) {
             await this.drizzle.db
                 .update(schema.student)
-                .set({ section: section.sectionName, enrollmentStatus: 'Assigned' })
+                .set({ section: section.sectionName })
                 .where((0, drizzle_orm_1.inArray)(schema.student.id, studentIds))
                 .returning();
         }
