@@ -1,0 +1,337 @@
+<div class="principal-shell">
+  <div class="principal-toast" [ngClass]="{ show: toast().show, error: toast().type === 'error' }">
+    <span class="material-icons">{{ toast().type === 'success' ? 'check_circle' : 'error' }}</span>
+    {{ toast().message }}
+  </div>
+
+  <div class="portal-hero-theme relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-800 to-indigo-900 p-4 sm:p-6 flex items-center shadow-lg border border-violet-700 mb-6">
+    <div
+      class="absolute inset-y-0 right-0 w-[40%] max-w-[300px] pointer-events-none"
+      style="-webkit-mask-image: linear-gradient(to right, transparent 0%, black 50%); mask-image: linear-gradient(to right, transparent 0%, black 50%);"
+    >
+      <video autoplay loop muted playsinline [muted]="true" [autoplay]="true" class="w-full h-full object-cover object-center opacity-80 mix-blend-luminosity">
+        <source src="/assets/hero-banner.mp4" type="video/mp4" />
+      </video>
+    </div>
+
+    <div class="relative z-10 w-full flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="principal-hero-profile max-w-xl">
+        <span class="principal-hero-avatar">
+          <img
+            *ngIf="currentUser()?.avatarUrl; else principalHeroInitials"
+            [src]="currentUser()?.avatarUrl"
+            [alt]="principalName() + ' photo'"
+          />
+          <ng-template #principalHeroInitials>{{ principalInitials() }}</ng-template>
+        </span>
+        <div class="min-w-0">
+          <p class="text-[10px] font-extrabold uppercase tracking-widest text-violet-300">Principal Dashboard</p>
+          <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl drop-shadow-sm">
+            <span class="portal-hero-typing"><span class="portal-hero-typing-text">Welcome back, {{ principalName() }}!</span></span>
+          </h1>
+          <p class="text-violet-100 text-sm font-semibold mt-1">
+            School-wide leadership center for {{ academicYearLabel() }}.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-end gap-1 relative z-10 bg-white/10 border border-white/20 rounded-xl px-4 py-2">
+        <span class="text-[10px] font-extrabold uppercase tracking-widest text-violet-300">School attendance</span>
+        <strong class="text-2xl font-extrabold text-white">{{ summary().attendanceRate }}%</strong>
+        <small class="text-xs text-violet-100">Overall attendance trend</small>
+      </div>
+    </div>
+  </div>
+
+  <nav class="module-strip">
+    <a *ngFor="let module of modules" [routerLink]="['/principal', module.route]" [ngClass]="{ active: currentView() === module.route }">
+      <span class="material-icons">{{ module.icon }}</span>
+      {{ module.label }}
+      <b *ngIf="module.route === 'alerts' && state().alerts.length">{{ state().alerts.length }}</b>
+    </a>
+  </nav>
+
+  <section *ngIf="loadState().loading" class="panel">
+    <div class="empty-state compact-empty">
+      <span class="material-icons">sync</span>
+      <strong>Loading live Principal data</strong>
+      <p>Fetching students, teachers, sections, attendance, grades, and calendar events from the school system.</p>
+    </div>
+  </section>
+
+  <section *ngIf="!loadState().loading && loadState().error" class="panel">
+    <div class="empty-state compact-empty">
+      <span class="material-icons">error</span>
+      <strong>Data source unavailable</strong>
+      <p>{{ loadState().error }}</p>
+      <button type="button" class="primary" (click)="retryLoad()">Retry from active academic year</button>
+    </div>
+  </section>
+
+  <ng-container *ngIf="!loadState().loading && !loadState().error">
+    <section *ngIf="currentView() === 'dashboard'" class="principal-grid">
+      <article class="kpi emerald">
+        <span class="material-icons">school</span>
+        <small>Total Students</small>
+        <strong>{{ summary().totalStudents }}</strong>
+        <em>{{ summary().enrollmentStatus.active }} active</em>
+      </article>
+      <article class="kpi teal">
+        <span class="material-icons">groups_3</span>
+        <small>Total Teachers</small>
+        <strong>{{ summary().totalTeachers }}</strong>
+        <em>{{ maxTeacherLoad() }} max load</em>
+      </article>
+      <article class="kpi blue">
+        <span class="material-icons">domain</span>
+        <small>Total Sections</small>
+        <strong>{{ summary().totalClasses }}</strong>
+        <em>{{ gradeEnrollment().length }} grade levels</em>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Recent Alerts</p>
+            <h2>Critical Watch List</h2>
+          </div>
+          <a routerLink="/principal/alerts">Open</a>
+        </div>
+        <div class="alert-list">
+          <div *ngFor="let alert of state().alerts.slice(0, 4)" [ngClass]="alertClass(alert.severity)">
+            <strong>{{ alert.title }}</strong>
+            <span>{{ alert.severity }} • {{ alert.owner }}</span>
+          </div>
+          <p *ngIf="!state().alerts.length" class="text-sm text-slate-500">No active alerts at this time.</p>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Upcoming Events & Holidays</p>
+            <h2>School Calendar</h2>
+          </div>
+          <a routerLink="/principal/calendar">Full View</a>
+        </div>
+        <div class="calendar-list">
+          <div *ngIf="calendarEvents().length === 0" class="principal-calendar-empty">
+            No upcoming events scheduled.
+          </div>
+          <div
+            *ngFor="let event of calendarEvents().slice(0, 5)"
+            routerLink="/principal/calendar"
+            class="principal-calendar-event"
+          >
+            <i [style.background]="event.color || '#3b82f6'"></i>
+            <span>
+              <strong>{{ event.title }}</strong>
+              <small>{{ event.eventType }} <ng-container *ngIf="event.description">• {{ event.description }}</ng-container></small>
+            </span>
+            <b>
+              <strong>{{ event.eventDate | date:'MMM d' }}</strong>
+              <small>{{ event.eventDate | date:'EEEE' }}</small>
+            </b>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section *ngIf="currentView() === 'teachers'" class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Teacher Overview</p>
+          <h2>Workload and Performance</h2>
+        </div>
+      </div>
+      <div class="data-table">
+        <div class="table-head"><span>Teacher</span><span>Department</span><span>Classes</span><span>Attendance</span><span>Performance</span></div>
+        <div *ngFor="let teacher of teacherWorkload()">
+          <span><strong>{{ teacher.name }}</strong><small>{{ teacher.status }}</small></span>
+          <span>{{ teacher.department }}</span>
+          <span>{{ teacher.classesHandled }}</span>
+          <span><b class="bar"><i [style.width]="percent(teacher.attendanceRate)"></i></b>{{ teacher.attendanceRate }}%</span>
+          <span>{{ teacher.performance }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="currentView() === 'students'" class="principal-grid">
+      <article class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Student Analytics</p>
+            <h2>Enrollment by Grade</h2>
+          </div>
+          <select [ngModel]="gradeFilter()" (ngModelChange)="gradeFilter.set($event)">
+            <option *ngFor="let grade of gradeLevels()" [value]="grade">
+              {{ grade === 'All' ? 'All grade levels' : displayGradeLevel(grade) }}
+            </option>
+          </select>
+        </div>
+        <div class="grade-bars">
+          <div *ngFor="let item of gradeEnrollment()"><span>{{ displayGradeLevel(item.gradeLevel) }}</span><b><i [style.width.%]="item.total * 8 + 4"></i></b><strong>{{ item.total }}</strong></div>
+          <p *ngIf="!gradeEnrollment().length" class="text-sm text-slate-500">No grade distribution data available.</p>
+        </div>
+      </article>
+      <article class="panel wide">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Student Risk & Performance</p>
+            <h2>At-Risk and Top Performers</h2>
+          </div>
+        </div>
+        <div class="split-list">
+          <div>
+            <h3>At-risk learners</h3>
+            <p *ngFor="let student of atRiskStudents()"><strong>{{ student.name }}</strong><span>{{ displayGradeLevel(student.gradeLevel) }} • Avg {{ student.average }} • Att {{ student.attendanceRate }}%</span></p>
+            <p *ngIf="!atRiskStudents().length" class="text-sm text-slate-500">No at-risk learners identified.</p>
+          </div>
+          <div>
+            <h3>Top performers</h3>
+            <p *ngFor="let student of topPerformers()"><strong>{{ student.name }}</strong><span>{{ student.section }} • Avg {{ student.average }}</span></p>
+            <p *ngIf="!topPerformers().length" class="text-sm text-slate-500">No performance highlights yet.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section *ngIf="currentView() === 'classes'" class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Class & Section Management</p>
+          <h2>Live Section Cards</h2>
+        </div>
+      </div>
+      <div class="section-grid">
+        <article *ngFor="let section of state().classes" class="section-card">
+          <div class="section-card-top">
+            <span class="section-grade">{{ displayGradeLevel(section.gradeLevel) }}</span>
+            <span class="section-signal" [ngClass]="{ danger: section.attendanceRate < 85 }">
+              {{ section.attendanceRate < 85 ? 'Needs review' : 'Stable' }}
+            </span>
+          </div>
+
+          <h2>{{ section.section }}</h2>
+          <p class="section-adviser">
+            <span class="material-icons">person</span>
+            Adviser: {{ section.adviser || 'Unassigned' }}
+          </p>
+
+          <div class="subject-chip-row">
+            <span *ngFor="let subject of sectionSubjectChips(section)" class="subject-chip">{{ subject }}</span>
+            <span *ngIf="hiddenSubjectCount(section)" class="subject-chip more">+{{ hiddenSubjectCount(section) }} more</span>
+            <span *ngIf="!sectionSubjectChips(section).length" class="subject-chip muted">No subject assigned</span>
+          </div>
+
+          <div class="section-metrics">
+            <div>
+              <span>Enrollment</span>
+              <strong>{{ section.enrollment }}</strong>
+              <b><i [style.width.%]="sectionEnrollmentWidth(section.enrollment)"></i></b>
+            </div>
+            <div>
+              <span>Average</span>
+              <strong>{{ section.average }}</strong>
+              <b><i [style.width.%]="section.average"></i></b>
+            </div>
+            <div>
+              <span>Attendance</span>
+              <strong>{{ section.attendanceRate }}%</strong>
+              <b><i [style.width.%]="section.attendanceRate"></i></b>
+            </div>
+          </div>
+        </article>
+        <p *ngIf="!state().classes.length" class="text-sm text-slate-500">No sections are available for this academic year.</p>
+      </div>
+    </section>
+
+    <section *ngIf="currentView() === 'performance'" class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Academic Performance</p>
+          <h2>Subject and Grade Analytics</h2>
+        </div>
+        <select [ngModel]="subjectFilter()" (ngModelChange)="subjectFilter.set($event)">
+          <option *ngFor="let subject of subjects()">{{ subject }}</option>
+        </select>
+      </div>
+      <div class="performance-grid">
+        <div *ngFor="let subject of subjectLeaders()">
+          <span>{{ subject.subject }}</span>
+          <strong>{{ subject.average }}</strong>
+          <small>{{ displayGradeLevel(subject.gradeLevel) }} • {{ subject.quarter }} • Pass {{ subject.passRate }}%</small>
+          <b><i [style.width.%]="subject.average"></i></b>
+        </div>
+        <p *ngIf="!subjectLeaders().length" class="text-sm text-slate-500">No subject-level performance data available.</p>
+      </div>
+    </section>
+
+    <section *ngIf="currentView() === 'attendance'" class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Attendance Monitoring</p>
+          <h2>Section Attendance Health</h2>
+        </div>
+      </div>
+      <div class="data-table compact">
+        <div class="table-head"><span>Section</span><span>Adviser</span><span>Attendance</span><span>Signal</span></div>
+        <div *ngFor="let section of state().classes">
+          <span>{{ displayGradeLevel(section.gradeLevel) }} - {{ section.section }}</span>
+          <span>{{ section.adviser }}</span>
+          <span><b class="bar"><i [style.width]="percent(section.attendanceRate)"></i></b>{{ section.attendanceRate }}%</span>
+          <span [ngClass]="{ danger: section.attendanceRate < 85 }">{{ section.attendanceRate < 85 ? 'Intervention' : 'Stable' }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="currentView() === 'reports'" class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Reports & Analytics Center</p>
+          <h2>Leadership Export Center</h2>
+        </div>
+      </div>
+      <div class="report-grid">
+        <button type="button" (click)="exportReport('Academic report')">
+          <span class="material-icons">bar_chart</span>
+          <strong>Academic Reports</strong>
+          <small>Attendance, subject averages, trends</small>
+        </button>
+        <button type="button" (click)="exportReport('Attendance report')">
+          <span class="material-icons">fact_check</span>
+          <strong>Attendance Reports</strong>
+          <small>Section and chronic-absence summaries</small>
+        </button>
+        <button type="button" (click)="exportReport('Enrollment report')">
+          <span class="material-icons">how_to_reg</span>
+          <strong>Enrollment Reports</strong>
+          <small>Grade-level and status tracking</small>
+        </button>
+        <button type="button" (click)="exportReport('Teacher performance report')">
+          <span class="material-icons">groups_3</span>
+          <strong>Teacher Performance</strong>
+          <small>Load, attendance, grade contribution</small>
+        </button>
+      </div>
+    </section>
+
+    <section *ngIf="currentView() === 'alerts'" class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Monitoring & Alerts</p>
+          <h2>System Notifications</h2>
+        </div>
+      </div>
+      <div class="alert-list large">
+        <div *ngFor="let alert of state().alerts" [ngClass]="alertClass(alert.severity)">
+          <strong>{{ alert.title }}</strong>
+          <span>{{ alert.severity }} • {{ alert.owner }}</span>
+          <p>{{ alert.detail }}</p>
+        </div>
+        <p *ngIf="!state().alerts.length" class="text-sm text-slate-500">No active alerts at this moment.</p>
+      </div>
+    </section>
+  </ng-container>
+</div>
+

@@ -1,0 +1,142 @@
+export type ChatMessageSource = 'local' | 'remote' | 'system';
+
+export interface FloatingChatMessage {
+  id: string;
+  body: string;
+  senderName: string;
+  senderRole: string;
+  source: ChatMessageSource;
+  sentAt: string;
+}
+
+export interface BackendChatMessage {
+  id: string;
+  body: string;
+  senderName: string;
+  senderRole: string;
+  source: string;
+  createdAt: string;
+}
+
+export interface BackendChatConversation {
+  id: string;
+  messages?: BackendChatMessage[];
+}
+
+export interface BackendUnreadCount {
+  unreadCount: number;
+}
+
+export interface BackendBroadcastResult {
+  body: string;
+  recipientCount: number;
+  messageCount: number;
+}
+
+export interface FloatingChatStaffContact {
+  id: string;
+  email: string;
+  role: string;
+  displayName: string;
+  avatarUrl?: string;
+  assignedGradeLevel?: string;
+  advisoryClass?: string;
+  accountStatus?: string;
+  unreadCount?: number;
+}
+
+export interface BuildChatMessageInput {
+  body: string;
+  senderName: string;
+  senderRole: string;
+  source: ChatMessageSource;
+  now?: Date;
+}
+
+export interface SocketEndpoint {
+  url: string;
+  path: string;
+}
+
+export function buildChatMessage(input: BuildChatMessageInput): FloatingChatMessage {
+  const body = input.body.trim();
+
+  if (!body) {
+    throw new Error('Message body is required.');
+  }
+
+  const now = input.now ?? new Date();
+
+  return {
+    id: `chat-${now.getTime()}-${Math.random().toString(36).slice(2, 9)}`,
+    body,
+    senderName: input.senderName.trim() || 'SFXSAI User',
+    senderRole: input.senderRole.trim() || 'User',
+    source: input.source,
+    sentAt: now.toISOString(),
+  };
+}
+
+export function normalizeChatMessages(messages: FloatingChatMessage[]): FloatingChatMessage[] {
+  return messages
+    .filter(message => Boolean(message.id && message.body?.trim() && message.sentAt))
+    .map(message => ({ ...message, body: message.body.trim() }))
+    .sort((left, right) => new Date(left.sentAt).getTime() - new Date(right.sentAt).getTime());
+}
+
+export function resolveSocketEndpoint(apiUrl: string, browserOrigin = ''): SocketEndpoint {
+  const trimmedApiUrl = apiUrl.trim().replace(/\/+$/, '') || '/';
+
+  if (trimmedApiUrl.startsWith('/')) {
+    return {
+      url: browserOrigin || '/',
+      path: `${trimmedApiUrl}/socket.io`.replace(/\/{2,}/g, '/'),
+    };
+  }
+
+  const parsedApiUrl = new URL(trimmedApiUrl);
+  const pathPrefix = parsedApiUrl.pathname === '/' ? '' : parsedApiUrl.pathname.replace(/\/+$/, '');
+
+  return {
+    url: `${parsedApiUrl.protocol}//${parsedApiUrl.host}`,
+    path: `${pathPrefix}/socket.io`,
+  };
+}
+
+export function calculateUnreadCount(messages: FloatingChatMessage[], isOpen: boolean): number {
+  if (isOpen) {
+    return 0;
+  }
+
+  return messages.filter(message => message.source === 'remote' || message.source === 'system').length;
+}
+
+export function mapBackendConversationToFloatingMessages(
+  conversation: BackendChatConversation,
+  currentUserEmail: string,
+): FloatingChatMessage[] {
+  const email = currentUserEmail.trim().toLowerCase();
+
+  return normalizeChatMessages(
+    (conversation.messages ?? []).map(message => ({
+      id: message.id,
+      body: message.body,
+      senderName: message.senderName,
+      senderRole: message.senderRole,
+      source: mapBackendMessageSource(message, email),
+      sentAt: message.createdAt,
+    })),
+  );
+}
+
+function mapBackendMessageSource(message: BackendChatMessage, currentUserEmail: string): ChatMessageSource {
+  if (message.source === 'SYSTEM') {
+    return 'system';
+  }
+
+  if (message.source === 'USER' && message.senderName.trim().toLowerCase() === currentUserEmail) {
+    return 'local';
+  }
+
+  return 'remote';
+}

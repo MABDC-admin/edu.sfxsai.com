@@ -1,0 +1,126 @@
+<section class="floating-chat" [ngClass]="{ 'is-open': chat.isOpen(), 'has-unread': chat.hasUnread() }" aria-label="SFXSAI live chat">
+  <div class="chat-panel" *ngIf="chat.isOpen()">
+    <header class="chat-header">
+      <div class="chat-avatar">
+        <img
+          *ngIf="chat.selectedContact()?.avatarUrl as headerAvatarUrl; else chatHeaderIcon"
+          [src]="headerAvatarUrl"
+          [alt]="chat.chatTitle() + ' photo'"
+        />
+        <ng-template #chatHeaderIcon>
+          <span class="material-icons">support_agent</span>
+        </ng-template>
+      </div>
+      <div>
+        <p class="chat-kicker">SFXSAI Live Chat</p>
+        <h3>{{ chat.chatTitle() }}</h3>
+        <span class="chat-status"><i></i> {{ chat.chatSubtitle() }}</span>
+      </div>
+      <button type="button" class="icon-button" (click)="chat.close()" aria-label="Close chat">
+        <span class="material-icons">close</span>
+      </button>
+    </header>
+
+    <div class="chat-tools" *ngIf="chat.canBroadcastTest()">
+      <button type="button" (click)="sendTestToAll()" [disabled]="isBroadcastingTest">
+        <span class="material-icons">{{ isBroadcastingTest ? 'hourglass_empty' : 'campaign' }}</span>
+        {{ isBroadcastingTest ? 'Sending...' : 'Send test to all' }}
+      </button>
+    </div>
+
+    <div class="chat-recipient" *ngIf="chat.contacts().length">
+      <label class="chat-recipient-label" for="floatingChatRecipient">Receiver</label>
+      <select
+        id="floatingChatRecipient"
+        class="chat-contact-select"
+        name="floatingChatRecipient"
+        [ngModel]="chat.selectedRecipientId()"
+        (ngModelChange)="chat.selectRecipient($event)"
+        aria-label="Chat contact"
+      >
+        <option *ngFor="let contact of chat.contacts()" [ngValue]="contact.id">
+          {{ contact.displayName }} • {{ contact.role }}<ng-container *ngIf="contact.assignedGradeLevel"> • {{ contact.assignedGradeLevel }}</ng-container><ng-container *ngIf="contact.unreadCount"> • {{ contact.unreadCount }} new</ng-container>
+        </option>
+      </select>
+      <div class="chat-unread-receivers" *ngIf="unreadContacts().length">
+        <button
+          *ngFor="let contact of unreadContacts()"
+          type="button"
+          class="chat-unread-receiver"
+          (click)="chat.selectRecipient(contact.id)"
+        >
+          <span>{{ contact.displayName }}</span>
+          <b>{{ contact.unreadCount }}</b>
+        </button>
+      </div>
+      <div class="chat-selected-contact" *ngIf="chat.selectedContact() as selected; else noReceiverSelected">
+        <span class="contact-avatar">
+          <img
+            *ngIf="selected.avatarUrl; else selectedContactInitial"
+            [src]="selected.avatarUrl"
+            [alt]="selected.displayName + ' photo'"
+          />
+          <ng-template #selectedContactInitial>{{ selected.displayName.slice(0, 1) }}</ng-template>
+        </span>
+        <span class="contact-main">
+          <strong>{{ selected.displayName }}</strong>
+          <small>{{ selected.role }}<ng-container *ngIf="selected.assignedGradeLevel"> • {{ selected.assignedGradeLevel }}</ng-container></small>
+        </span>
+        <b class="contact-badge" *ngIf="selected.unreadCount">{{ selected.unreadCount }}</b>
+      </div>
+      <ng-template #noReceiverSelected>
+        <div class="chat-selected-contact chat-selected-contact--empty">
+          <span class="contact-avatar"><span class="material-icons">person_search</span></span>
+          <span class="contact-main">
+            <strong>Select a receiver</strong>
+            <small>Choose a staff contact</small>
+          </span>
+        </div>
+      </ng-template>
+    </div>
+
+    <div #messageList class="chat-messages">
+      <article
+        *ngFor="let message of chat.messages()"
+        class="chat-message"
+        [ngClass]="{
+          'from-user': message.source === 'local',
+          'from-support': message.source !== 'local'
+        }"
+      >
+        <div class="message-meta">
+          <strong>{{ message.senderName }}</strong>
+          <span>{{ message.senderRole }}</span>
+        </div>
+        <p>{{ message.body }}</p>
+        <time>{{ formatTime(message.sentAt) }}</time>
+      </article>
+    </div>
+
+    <form class="chat-compose" (ngSubmit)="send()">
+      <label>
+        <span class="sr-only">Message</span>
+        <textarea
+          #messageInput
+          [(ngModel)]="draftText"
+          name="floatingChatMessage"
+          rows="2"
+          placeholder="Write a message..."
+          (ngModelChange)="onInput($event)"
+          (keydown)="onKeydown($event)"
+        ></textarea>
+      </label>
+      <button type="submit" aria-label="Send message">
+        <span class="material-icons">send</span>
+      </button>
+    </form>
+    <p class="chat-error" *ngIf="error()">{{ error() }}</p>
+  </div>
+
+  <button type="button" class="chat-launcher" (click)="chat.toggle()" aria-label="Open live chat">
+    <span class="launcher-glow"></span>
+    <span class="material-icons">{{ chat.isOpen() ? 'chat_bubble' : 'forum' }}</span>
+    <strong *ngIf="!chat.isOpen()">Chat</strong>
+    <small *ngIf="chat.unreadCount()">{{ chat.unreadCount() }}</small>
+  </button>
+</section>

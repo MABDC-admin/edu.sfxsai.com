@@ -1,0 +1,75 @@
+<section class="finance-page finance-profile-page">
+  <header class="finance-header profile-hero">
+    <div class="profile-identity">
+      <div class="profile-avatar">{{ initials }}</div>
+      <div>
+        <p class="finance-eyebrow">Finance Profile</p>
+        <h1 class="finance-title">{{ displayName }}</h1>
+        <p class="finance-subtitle">Manage the account name shown across this browser session.</p>
+      </div>
+    </div>
+    <div class="profile-role-card">
+      <span class="material-icons">verified_user</span>
+      <div>
+        <small>Portal Access</small>
+        <strong>{{ role }}</strong>
+      </div>
+    </div>
+  </header>
+
+  <div class="profile-layout">
+    <section class="finance-panel profile-form-card">
+      <div class="section-heading">
+        <p class="finance-eyebrow">Editable Details</p>
+        <h2>Account Name</h2>
+      </div>
+
+      <form (ngSubmit)="saveProfileName()">
+        <label class="field">
+          <span>Name</span>
+          <input [(ngModel)]="profileName" name="profileName" autocomplete="name" placeholder="Enter finance user name" />
+        </label>
+
+        <div class="readonly-grid">
+          <label class="field">
+            <span>Email</span>
+            <input [value]="email" readonly />
+          </label>
+          <label class="field">
+            <span>Role</span>
+            <input [value]="role" readonly />
+          </label>
+        </div>
+
+        <div class="button-row">
+          <button class="primary-btn" type="submit">
+            <span class="material-icons">save</span>
+            Save Name
+          </button>
+          <button class="secondary-btn" type="button" (click)="resetName()">
+            <span class="material-icons">restart_alt</span>
+            Reset
+          </button>
+        </div>
+      </form>
+
+      <p class="message" *ngIf="message">{{ message }}</p>
+      <p class="message error" *ngIf="error">{{ error }}</p>
+    </section>
+
+    <aside class="finance-panel profile-context-card">
+      <span class="material-icons">shield_person</span>
+      <h2>Finance Workspace</h2>
+      <p>
+        This profile controls the visible finance account name for payment posting,
+        billing review, ledger checks, and report preparation.
+      </p>
+      <div class="context-list">
+        <span>Payments</span>
+        <span>Billing & Assessment</span>
+        <span>Student Ledger</span>
+        <span>Reports</span>
+      </div>
+    </aside>
+  </div>
+</section>

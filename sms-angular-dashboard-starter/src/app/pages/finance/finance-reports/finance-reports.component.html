@@ -1,0 +1,104 @@
+<section class="finance-page finance-reports-page">
+  <header class="finance-header reports-hero">
+    <div>
+      <p class="finance-eyebrow">Reports</p>
+      <h1 class="finance-title">Finance Reports Center</h1>
+      <p class="finance-subtitle">
+        Export-ready finance views for {{ academicYear?.code || 'the selected academic year' }}.
+      </p>
+      <p class="report-catalog">
+        Collection Summary • Billing & Assessment Status • Accounts Receivable • Student Ledger Export •
+        Payment History • Discount & Scholarship Summary • Finance Clearance List
+      </p>
+    </div>
+    <div class="finance-header-actions">
+      <app-finance-pdf-export-button title="Finance Reports Center" [subtitle]="academicYear?.code || 'Selected academic year'" targetSelector=".finance-reports-page" />
+      <button class="secondary-btn" type="button" (click)="loadReports()">
+        <span class="material-icons">refresh</span>
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  <div class="summary-strip report-summary-strip">
+    <article class="summary-card">
+      <span>Collected</span>
+      <strong>₱{{ collectionSummary.collected | number:'1.2-2' }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Assessed</span>
+      <strong>₱{{ collectionSummary.assessed | number:'1.2-2' }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Receivable</span>
+      <strong>₱{{ totalReceivable | number:'1.2-2' }}</strong>
+    </article>
+    <article class="summary-card">
+      <span>Collection Rate</span>
+      <strong>{{ collectionSummary.rate }}%</strong>
+    </article>
+  </div>
+
+  <p class="message error" *ngIf="error">{{ error }}</p>
+  <p class="message" *ngIf="loading">Loading finance reports...</p>
+
+  <section class="reports-grid">
+    <article *ngFor="let report of financeReportCards; trackBy: trackReport" class="report-card" [ngClass]="'report-card--' + report.accent">
+      <div class="report-icon"><span class="material-icons">{{ report.icon }}</span></div>
+      <div>
+        <p class="finance-eyebrow">{{ report.source }} • {{ report.cadence }}</p>
+        <h2>{{ report.title }}</h2>
+        <p>{{ report.description }}</p>
+      </div>
+      <strong>{{ report.metric }}</strong>
+    </article>
+  </section>
+
+  <section class="finance-grid reports-detail-grid">
+    <article class="finance-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="finance-eyebrow">Billing & Assessment Status</p>
+          <h2>Status Breakdown</h2>
+        </div>
+      </div>
+      <div class="status-stack">
+        <div *ngFor="let row of statusRows">
+          <span>{{ row.status }}</span>
+          <strong>{{ row.count }}</strong>
+        </div>
+        <p class="empty-note" *ngIf="!statusRows.length">No assessments found for this academic year.</p>
+      </div>
+    </article>
+
+    <article class="finance-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="finance-eyebrow">Payment History</p>
+          <h2>Recent Receipt Register</h2>
+        </div>
+      </div>
+      <table class="finance-table">
+        <thead>
+          <tr>
+            <th>Receipt</th>
+            <th>Method</th>
+            <th>Date</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let payment of recentPayments">
+            <td>{{ payment.receiptNumber }}</td>
+            <td>{{ payment.method }}</td>
+            <td>{{ payment.paymentDate | date:'mediumDate' }}</td>
+            <td>₱{{ payment.amount | number:'1.2-2' }}</td>
+          </tr>
+          <tr *ngIf="!recentPayments.length">
+            <td colspan="4">No payments recorded for this academic year.</td>
+          </tr>
+        </tbody>
+      </table>
+    </article>
+  </section>
+</section>

@@ -1,0 +1,79 @@
+<section class="registrar-profile-page">
+  <header class="registrar-profile-hero">
+    <div class="identity-block">
+      <div class="profile-avatar">
+        <img *ngIf="avatarUrl; else initialsAvatar" [src]="avatarUrl" [alt]="displayName + ' profile photo'" />
+        <ng-template #initialsAvatar>{{ initials }}</ng-template>
+      </div>
+      <div class="identity-copy">
+        <p>Registrar Profile</p>
+        <h1>{{ displayName }}</h1>
+        <span>Manage the account name shown in dashboard, chat, and registrar actions.</span>
+      </div>
+    </div>
+
+    <aside class="access-card">
+      <span class="material-icons">admin_panel_settings</span>
+      <div>
+        <small>Portal Access</small>
+        <strong>{{ role }}</strong>
+      </div>
+    </aside>
+  </header>
+
+  <div class="profile-grid">
+    <section class="profile-panel profile-form-card">
+      <div class="section-heading">
+        <p>Editable Details</p>
+        <h2>Account Identity</h2>
+      </div>
+
+      <form (ngSubmit)="saveProfileName()">
+        <label class="field">
+          <span>Name</span>
+          <input [(ngModel)]="profileName" name="profileName" autocomplete="name" placeholder="Enter registrar name" />
+        </label>
+
+        <div class="readonly-grid">
+          <label class="field">
+            <span>Email</span>
+            <input [value]="email" readonly />
+          </label>
+          <label class="field">
+            <span>Role</span>
+            <input [value]="role" readonly />
+          </label>
+        </div>
+
+        <div class="button-row">
+          <button class="primary-btn" type="submit">
+            <span class="material-icons">save</span>
+            Save Name
+          </button>
+          <button class="secondary-btn" type="button" (click)="resetName()">
+            <span class="material-icons">restart_alt</span>
+            Reset
+          </button>
+        </div>
+      </form>
+
+      <p class="message" *ngIf="message">{{ message }}</p>
+      <p class="message error" *ngIf="error">{{ error }}</p>
+    </section>
+
+    <aside class="profile-panel workspace-card">
+      <span class="material-icons">fact_check</span>
+      <h2>Registrar Workspace</h2>
+      <p>
+        This account identity appears while reviewing enrollment, managing learner records,
+        processing documents, and sending registrar communications.
+      </p>
+      <div class="workspace-list">
+        <span>Enrollment Review</span>
+        <span>Student Masterlist</span>
+        <span>Document Verification</span>
+        <span>Registrar Reports</span>
+      </div>
+    </aside>
+  </div>
+</section>

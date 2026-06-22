@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/shared/pdf-export/finance-pdf-export-button.component.ts"],
+  "sourcesContent": ["\n    :host {\n      display: inline-flex;\n    }\n\n    .pdf-export-button {\n      display: inline-flex;\n      align-items: center;\n      gap: .4rem;\n      border: 1px solid #cbd5e1;\n      border-radius: 10px;\n      background: #fff;\n      color: #0f766e;\n      padding: .55rem .75rem;\n      font-size: .76rem;\n      font-weight: 950;\n      cursor: pointer;\n      box-shadow: 0 8px 18px rgba(15, 23, 42, .06);\n    }\n\n    .pdf-export-button:hover {\n      border-color: #0f766e;\n      background: #ecfeff;\n    }\n\n    .material-icons {\n      font-size: 1rem;\n    }\n  "],
+  "mappings": ";AACI;AACE,WAAA;;AAGF,CAAA;AACE,WAAA;AACA,eAAA;AACA,OAAA;AACA,UAAA,IAAA,MAAA;AACA,iBAAA;AACA,cAAA;AACA,SAAA;AACA,WAAA,QAAA;AACA,aAAA;AACA,eAAA;AACA,UAAA;AACA,cAAA,EAAA,IAAA,KAAA,KAAA,EAAA,EAAA,EAAA,EAAA,EAAA,EAAA;;AAGF,CAfA,iBAeA;AACE,gBAAA;AACA,cAAA;;AAGF,CAAA;AACE,aAAA;;",
+  "names": []
+}

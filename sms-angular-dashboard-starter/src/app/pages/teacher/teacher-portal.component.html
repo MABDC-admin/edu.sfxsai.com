@@ -1,0 +1,985 @@
+<div class="teacher-shell">
+  <div
+    class="teacher-toast"
+    [ngClass]="{
+      'teacher-toast--show': toast().show,
+      'teacher-toast--error': toast().type === 'error'
+    }"
+  >
+    <span class="material-icons">{{ toast().type === 'success' ? 'check_circle' : 'error' }}</span>
+    <span>{{ toast().message }}</span>
+  </div>
+
+  <div class="portal-hero-theme relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-800 to-indigo-900 p-4 sm:p-6 flex items-center shadow-lg border border-violet-700 mb-6">
+    <div class="absolute inset-y-0 right-0 w-[40%] max-w-[300px] pointer-events-none" 
+         style="-webkit-mask-image: linear-gradient(to right, transparent 0%, black 50%); mask-image: linear-gradient(to right, transparent 0%, black 50%);">
+      <video autoplay loop muted playsinline [muted]="true" [autoplay]="true" class="w-full h-full object-cover object-center opacity-80 mix-blend-luminosity">
+        <source src="/assets/hero-banner.mp4" type="video/mp4" />
+      </video>
+    </div>
+    
+    <div class="relative z-10 w-full flex flex-col items-center gap-4 text-center lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center lg:text-left">
+      <div class="max-w-xl lg:justify-self-start">
+        <div class="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:text-left lg:justify-start">
+          <span class="teacher-hero-avatar flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/35 bg-white/15 text-lg font-black text-white shadow-lg shadow-violet-950/25 ring-1 ring-white/10 backdrop-blur">
+            <img *ngIf="state().teacher.avatarUrl; else teacherHeroInitials" [src]="state().teacher.avatarUrl" [alt]="state().teacher.name + ' avatar'" class="h-full w-full object-cover" />
+            <ng-template #teacherHeroInitials>{{ teacherInitials() }}</ng-template>
+          </span>
+          <div>
+            <p class="text-[10px] font-extrabold uppercase tracking-widest text-violet-300">Teacher Portal</p>
+            <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl drop-shadow-sm">
+              <span class="portal-hero-typing"><span class="portal-hero-typing-text">Welcome back, <span class="teacher-hero-name-gold">{{ state().teacher.name }}</span>!</span></span>
+            </h1>
+            <p class="text-violet-100 text-sm font-semibold mt-1">
+              {{ teacherMeta() }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="flex flex-wrap justify-center gap-2 relative z-10 lg:justify-self-center">
+        <a routerLink="/teacher/dll" class="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-xs font-extrabold text-white hover:bg-white/20 transition-colors flex items-center gap-1.5 shadow-sm no-underline">
+          <span class="material-icons text-[16px]">add_task</span> Add Lesson
+        </a>
+        <a routerLink="/teacher/attendance" class="rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-xs font-extrabold text-white hover:bg-white/20 transition-colors flex items-center gap-1.5 shadow-sm no-underline">
+          <span class="material-icons text-[16px]">fact_check</span> Take Attendance
+        </a>
+        <a routerLink="/teacher/resources" class="rounded-xl bg-white border border-transparent px-3 py-2 text-xs font-extrabold text-violet-800 hover:bg-violet-50 transition-colors flex items-center gap-1.5 shadow-sm no-underline">
+          <span class="material-icons text-[16px]">upload_file</span> Upload Resource
+        </a>
+      </div>
+      <div class="hidden lg:block" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <section *ngIf="currentView() === 'dashboard'" class="teacher-grid">
+    <article class="metric-card emerald">
+      <span class="material-icons">class</span>
+      <small>My Classes</small>
+      <strong>{{ dashboardSummary().myClasses }}</strong>
+    </article>
+    <article class="metric-card blue">
+      <span class="material-icons">groups</span>
+      <small>Total Students</small>
+      <strong>{{ dashboardSummary().totalStudents }}</strong>
+    </article>
+    <article class="metric-card amber">
+      <span class="material-icons">edit_note</span>
+      <small>Pending Grades</small>
+      <strong>{{ dashboardSummary().pendingGrades }}</strong>
+    </article>
+    <article class="metric-card teal">
+      <span class="material-icons">how_to_reg</span>
+      <small>Attendance Today</small>
+      <strong>{{ dashboardSummary().attendanceToday }}</strong>
+    </article>
+
+    <article class="registrar-events-panel wide">
+      <header class="registrar-events-header">
+        <div class="registrar-events-title">
+          <span class="material-icons">calendar_month</span>
+          <div>
+            <h3>School Calendar</h3>
+            <p>Stay ahead of important dates and never miss a thing.</p>
+          </div>
+        </div>
+        <div class="registrar-events-actions">
+          <button routerLink="/teacher/calendar" type="button" class="registrar-events-full-view">
+            <span>Full View</span>
+            <span class="material-icons">arrow_forward</span>
+          </button>
+          <button routerLink="/teacher/calendar" type="button" class="registrar-events-calendar-button" aria-label="Open school calendar">
+            <span class="material-icons">calendar_month</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="registrar-events-list">
+        <div *ngIf="calendarEvents().length === 0" class="registrar-events-empty" style="padding: 1rem; text-align: center; color: #64748b; font-size: 0.85rem;">
+          No upcoming events scheduled.
+        </div>
+        <a
+          *ngFor="let event of calendarEvents()"
+          class="registrar-event-card"
+          [ngClass]="eventToneClass(event.eventType)"
+          routerLink="/teacher/calendar">
+          <div class="registrar-event-icon-panel">
+            <span class="registrar-event-icon material-icons">{{ eventTypeIcon(event.eventType) }}</span>
+          </div>
+          <div class="registrar-event-content">
+            <h4>{{ event.title }}</h4>
+            <span class="registrar-event-pill">{{ event.eventType || 'Event' }}</span>
+          </div>
+          <div class="registrar-event-date">
+            <span class="material-icons">calendar_today</span>
+            <strong>{{ event.eventDate | date:'MMM d' }}</strong>
+            <small>{{ event.eventDate | date:'EEEE' }}</small>
+          </div>
+        </a>
+      </div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Calendar</p>
+          <h2>This Week</h2>
+        </div>
+      </div>
+      <div class="mini-calendar">
+        <div *ngFor="let item of state().classes">
+          <span *ngIf="scheduleDayLabel(item.schedule)">{{ scheduleDayLabel(item.schedule) }}</span>
+          <strong>{{ item.subject }}</strong>
+          <small>{{ item.section }}<ng-container *ngIf="item.room"> • {{ item.room }}</ng-container></small>
+        </div>
+        <div *ngIf="!hasClasses()" class="empty-state compact-empty">
+          <span class="material-icons">event_busy</span>
+          <strong>No teaching schedule</strong>
+          <p>Assigned classes and rooms will populate this calendar.</p>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section *ngIf="currentView() === 'profile'" class="panel">
+    <div class="panel-heading"><div><p class="eyebrow">Teacher Profile</p><h2>Personal Information</h2></div></div>
+    <form class="form-grid" (ngSubmit)="saveProfile()">
+      <label>Name <input [(ngModel)]="profileForm.name" name="name" required /></label>
+      <label>Email <input [(ngModel)]="profileForm.email" name="email" type="email" required /></label>
+      <label>Department <input [(ngModel)]="profileForm.department" name="department" /></label>
+      <label>Phone <input [(ngModel)]="profileForm.phone" name="phone" /></label>
+      <label>Advisory Class <input [(ngModel)]="profileForm.advisoryClass" name="advisoryClass" /></label>
+      <button class="primary" type="submit"><span class="material-icons">save</span> Save Profile</button>
+    </form>
+    <div class="assigned-subjects">
+      <span *ngFor="let section of state().classes">{{ section.subject }} • {{ section.section }}</span>
+      <span *ngIf="!hasClasses()">No assigned subjects yet</span>
+    </div>
+  </section>
+
+  <section *ngIf="currentView() === 'classes'" class="classes-roster-view grid gap-4">
+    <article *ngIf="!hasClasses()" class="panel wide empty-state">
+      <span class="material-icons">class</span>
+      <strong>No classes assigned yet</strong>
+      <p>This teacher portal is connected to the account, but no official class assignment records exist yet.</p>
+    </article>
+    <article *ngIf="hasClasses()" class="panel classes-roster-panel overflow-hidden bg-white">
+      <div class="panel-heading classes-roster-heading items-center">
+        <div>
+          <p class="eyebrow">Class Learners</p>
+          <h2>{{ selectedClassSectionName() }}</h2>
+          <p class="mt-1 text-sm font-bold text-slate-500">{{ selectedClassStudents().length }} learners in this roster</p>
+        </div>
+        <select class="max-w-72" [ngModel]="selectedClassId()" (ngModelChange)="selectedClassId.set($event)" [disabled]="!hasClasses()">
+          <option *ngFor="let section of classRosterOptions()" [value]="section.id">{{ section.section }}</option>
+        </select>
+      </div>
+
+      <div class="classes-roster-summary mb-4 grid grid-cols-1 gap-3 md:grid-cols-3" *ngIf="selectedClass() as section">
+        <span class="grid rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3"><small class="text-[10px] font-black uppercase tracking-widest text-emerald-700">Section</small><strong class="truncate text-slate-900">{{ section.section }}</strong></span>
+        <span class="grid rounded-2xl border border-blue-100 bg-blue-50/70 p-3"><small class="text-[10px] font-black uppercase tracking-widest text-blue-700">Learners</small><strong class="truncate text-slate-900">{{ selectedClassStudents().length }}</strong></span>
+        <span class="grid rounded-2xl border border-amber-100 bg-amber-50/70 p-3"><small class="text-[10px] font-black uppercase tracking-widest text-amber-700">Adviser</small><strong class="truncate text-slate-900">{{ state().teacher.name }}</strong></span>
+      </div>
+
+      <div class="classes-learner-grid grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4" *ngIf="selectedClassStudents().length">
+        <button
+          type="button"
+          *ngFor="let student of selectedClassStudents(); trackBy: trackByStudentId"
+          class="classes-learner-card relative grid min-h-[17rem] overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-lg shadow-slate-200/70 transition focus:outline-none focus:ring-4 focus:ring-blue-200 odd:bg-emerald-50/60 even:bg-blue-50/60"
+          (click)="viewAcademicProfile(student)"
+        >
+          <span class="classes-card-glow pointer-events-none absolute -bottom-10 right-[-15%] h-32 w-48 rounded-full bg-emerald-200/40 blur-2xl"></span>
+          <span class="classes-card-avatar relative grid h-20 w-20 place-items-center overflow-hidden rounded-[22px] border-4 border-white bg-gradient-to-br from-emerald-600 to-blue-600 text-lg font-black text-white shadow-xl shadow-slate-300/70">
+            <img *ngIf="learnerAvatarSource(student); else classesLearnerInitials" [src]="learnerAvatarSource(student)" [alt]="student.name + ' photo'" />
+            <ng-template #classesLearnerInitials>{{ buildTeacherStudentInitials(student) }}</ng-template>
+          </span>
+          <span class="classes-card-copy relative mt-3 grid gap-1">
+            <strong class="text-lg font-black leading-tight text-slate-950">{{ student.name }}</strong>
+            <small class="text-xs font-extrabold text-slate-500">{{ student.studentNo }}</small>
+          </span>
+          <span class="classes-card-meta relative mt-3 grid gap-2">
+            <span class="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-2 text-xs font-bold text-slate-700"><i class="material-icons text-base text-emerald-700">wc</i>{{ student.gender || 'Learner' }}</span>
+            <span class="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-2 text-xs font-bold text-slate-700"><i class="material-icons text-base text-blue-700">contact_phone</i>{{ student.contactNo || 'No contact' }}</span>
+            <span class="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-2 text-xs font-bold text-slate-700"><i class="material-icons text-base text-amber-700">family_restroom</i>{{ student.guardian || 'No guardian' }}</span>
+          </span>
+          <span class="classes-card-footer relative mt-4 grid grid-cols-[auto_1fr_auto] items-center gap-2 border-t border-slate-200 pt-3">
+            <b class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-black text-emerald-700">{{ averageFor(student.id) ?? 'Pending' }}</b>
+            <em class="text-xs font-black not-italic text-slate-500">Open profile</em>
+            <i class="material-icons text-lg text-emerald-700 transition-transform">arrow_forward</i>
+          </span>
+        </button>
+      </div>
+      <div *ngIf="!selectedClassStudents().length" class="empty-state compact-empty">
+        <span class="material-icons">person_search</span>
+        <strong>No learners in this class</strong>
+        <p>Learners will appear after registrar class assignment is completed.</p>
+      </div>
+    </article>
+  </section>
+
+  <section *ngIf="currentView() === 'attendance'" class="panel">
+    <div class="panel-heading pb-0 border-b-0">
+      <div class="w-full flex justify-between items-center mb-4">
+        <div><p class="eyebrow">Attendance Management</p><h2>School Form 2 (SF2)</h2></div>
+        <div class="tabs flex gap-4 border-b">
+          <button type="button" class="tab pb-2 font-medium" [ngClass]="{'active text-indigo-600 border-b-2 border-indigo-600': attendanceViewMode() === 'daily', 'text-gray-500': attendanceViewMode() !== 'daily'}" (click)="attendanceViewMode.set('daily')">Daily Marking</button>
+          <button type="button" class="tab pb-2 font-medium" [ngClass]="{'active text-indigo-600 border-b-2 border-indigo-600': attendanceViewMode() === 'sf2', 'text-gray-500': attendanceViewMode() !== 'sf2'}" (click)="attendanceViewMode.set('sf2')">SF2 Monthly Matrix</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Marking View -->
+    <ng-container *ngIf="attendanceViewMode() === 'daily'">
+      <div class="panel-heading pt-4">
+        <div></div>
+        <div class="inline-controls flex items-center gap-2">
+          <input type="date" [ngModel]="attendanceDate()" (ngModelChange)="attendanceDate.set($event)" />
+          <select [ngModel]="selectedAttendanceClassId()" (ngModelChange)="selectedAttendanceClassId.set($event)" [disabled]="!hasClasses()">
+            <option *ngFor="let section of attendanceClasses()" [value]="section.id">{{ section.section }}</option>
+          </select>
+          <button type="button" class="primary" (click)="markAllPresent()" [disabled]="!hasClasses() || selectedAttendanceClassStudents().length === 0">
+            <span class="material-icons">done_all</span> Present All
+          </button>
+        </div>
+      </div>
+      <div class="status-row">
+        <span *ngFor="let status of attendanceStatuses">{{ status }} <strong>{{ attendanceSummary()[status] }}</strong></span>
+      </div>
+      <div *ngIf="!hasClasses()" class="empty-state">
+        <span class="material-icons">fact_check</span>
+        <strong>Attendance is waiting for class assignments</strong>
+        <p>No fake attendance rows are shown. Assign a class first, then learners can be marked present, absent, late, or excused.</p>
+      </div>
+      <div class="attendance-list" *ngIf="hasClasses()">
+        <div *ngFor="let student of selectedAttendanceClassStudents()" class="attendance-row" (click)="openAttendanceDialog(student)">
+          <div class="learner-identity">
+            <span class="learner-avatar">
+              <img *ngIf="learnerAvatarSource(student); else attendanceLearnerInitials" [src]="learnerAvatarSource(student)" [alt]="student.name + ' photo'" />
+              <ng-template #attendanceLearnerInitials>{{ buildTeacherStudentInitials(student) }}</ng-template>
+            </span>
+            <span class="learner-copy"><strong>{{ student.name }}</strong><small>{{ student.studentNo }}</small></span>
+          </div>
+          <div class="attendance-actions">
+            <button *ngFor="let status of attendanceStatuses" [ngClass]="{ active: attendanceFor(student.id) === status }" (click)="setAttendance(student.id, status); $event.stopPropagation()">
+              {{ status }}
+            </button>
+            <label *ngIf="attendanceFor(student.id) === 'Absent' || attendanceFor(student.id) === 'Excused'" class="reason-field" (click)="$event.stopPropagation()">
+              Reason:
+              <input type="text" [ngModel]="attendanceReasonFor(student.id)" (ngModelChange)="updateAttendanceReason(student.id, $event)" placeholder="e.g. Sick, Family Emergency" />
+            </label>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- SF2 Monthly Matrix View -->
+    <ng-container *ngIf="attendanceViewMode() === 'sf2'">
+      <div class="panel-heading pt-4">
+        <div></div>
+        <div class="inline-controls flex items-center gap-2">
+          <input type="month" [ngModel]="sf2SelectedMonth()" (ngModelChange)="sf2SelectedMonth.set($event)" />
+          <select [ngModel]="selectedAttendanceClassId()" (ngModelChange)="selectedAttendanceClassId.set($event)" [disabled]="!hasClasses()">
+            <option *ngFor="let section of attendanceClasses()" [value]="section.id">{{ section.section }}</option>
+          </select>
+          <button type="button" class="primary" (click)="exportToSF2Excel()" [disabled]="!hasClasses() || selectedAttendanceClassStudents().length === 0">
+            <span class="material-icons">download</span> Export to Excel
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="!hasClasses()" class="empty-state">
+        <span class="material-icons">fact_check</span>
+        <strong>Waiting for class assignments</strong>
+      </div>
+
+      <div class="sf2-table-wrap" *ngIf="hasClasses()">
+        <table class="sf2-table">
+          <thead>
+            <tr>
+              <th rowspan="2" class="sticky-col">LEARNER'S NAME<br><small>(Last Name, First Name, Middle Name)</small></th>
+              <th [colSpan]="sf2Days().length" class="text-center">(1st row for date)</th>
+              <th colspan="2" class="text-center">Total for the Month</th>
+              <th rowspan="2">REMARK/S</th>
+            </tr>
+            <tr>
+              <th *ngFor="let day of sf2Days()" class="text-center date-cell">{{ day }}</th>
+              <th class="text-center">ABSENT</th>
+              <th class="text-center">TARDY</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Males -->
+            <tr *ngFor="let student of sf2MatrixData().males">
+              <td class="sticky-col font-medium">{{ student.name }}</td>
+              <td *ngFor="let day of sf2Days()" class="text-center" [ngClass]="{'text-red-500 font-bold': student.dailyRecord[day] === 'X'}">{{ student.dailyRecord[day] }}</td>
+              <td class="text-center">{{ student.absent }}</td>
+              <td class="text-center">{{ student.tardy }}</td>
+              <td></td>
+            </tr>
+            <tr class="font-bold bg-blue-50">
+              <td class="sticky-col">MALE | TOTAL Per Day</td>
+              <td *ngFor="let day of sf2Days()" class="text-center">{{ sf2DailyTotals().males.daily[day] }}</td>
+              <td class="text-center">{{ sf2DailyTotals().males.absent }}</td>
+              <td class="text-center">{{ sf2DailyTotals().males.tardy }}</td>
+              <td></td>
+            </tr>
+
+            <!-- Females -->
+            <tr *ngFor="let student of sf2MatrixData().females">
+              <td class="sticky-col font-medium">{{ student.name }}</td>
+              <td *ngFor="let day of sf2Days()" class="text-center" [ngClass]="{'text-red-500 font-bold': student.dailyRecord[day] === 'X'}">{{ student.dailyRecord[day] }}</td>
+              <td class="text-center">{{ student.absent }}</td>
+              <td class="text-center">{{ student.tardy }}</td>
+              <td></td>
+            </tr>
+            <tr class="font-bold bg-pink-50">
+              <td class="sticky-col">FEMALE | TOTAL Per Day</td>
+              <td *ngFor="let day of sf2Days()" class="text-center">{{ sf2DailyTotals().females.daily[day] }}</td>
+              <td class="text-center">{{ sf2DailyTotals().females.absent }}</td>
+              <td class="text-center">{{ sf2DailyTotals().females.tardy }}</td>
+              <td></td>
+            </tr>
+
+            <!-- Combined -->
+            <tr class="font-bold bg-gray-100">
+              <td class="sticky-col">COMBINED TOTAL Per Day</td>
+              <td *ngFor="let day of sf2Days()" class="text-center">{{ sf2DailyTotals().combined.daily[day] }}</td>
+              <td class="text-center">{{ sf2DailyTotals().combined.absent }}</td>
+              <td class="text-center">{{ sf2DailyTotals().combined.tardy }}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+  </section>
+
+  <div *ngIf="selectedAttendanceStudent() as student" class="attendance-dialog-backdrop" (click)="closeAttendanceDialog()">
+    <section class="attendance-profile-dialog" (click)="$event.stopPropagation()">
+      <button class="dialog-close" type="button" aria-label="Close attendance profile" (click)="closeAttendanceDialog()">
+        <span class="material-icons">close</span>
+      </button>
+      <header class="attendance-profile-header">
+        <span class="learner-avatar large">
+          <img *ngIf="learnerAvatarSource(student); else attendanceDialogInitials" [src]="learnerAvatarSource(student)" [alt]="student.name + ' photo'" />
+          <ng-template #attendanceDialogInitials>{{ buildTeacherStudentInitials(student) }}</ng-template>
+        </span>
+        <div>
+          <p class="eyebrow">Learner Attendance</p>
+          <h2>{{ student.name }}</h2>
+          <small>{{ selectedAttendanceSectionName() }} • {{ student.studentNo }}</small>
+        </div>
+      </header>
+
+      <div class="attendance-total-grid">
+        <span><small>Present</small><strong>{{ selectedAttendanceInsights().totals.Present }}</strong></span>
+        <span><small>Late</small><strong>{{ selectedAttendanceInsights().totals.Late }}</strong></span>
+        <span><small>Absent</small><strong>{{ selectedAttendanceInsights().totals.Absent }}</strong></span>
+        <span><small>Excused</small><strong>{{ selectedAttendanceInsights().totals.Excused }}</strong></span>
+      </div>
+
+      <div class="attendance-dialog-grid">
+        <article>
+          <div class="panel-heading compact-heading">
+            <div><p class="eyebrow">Monthly Attendance</p><h2>{{ attendanceDate() | date:'MMMM yyyy' }}</h2></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Status</th><th>Reason</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let record of selectedAttendanceInsights().monthRecords">
+                  <td>{{ record.date | date:'MMM d, yyyy' }}</td>
+                  <td><span class="pill">{{ record.status }}</span></td>
+                  <td>{{ record.reason || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div *ngIf="!selectedAttendanceInsights().monthRecords.length" class="empty-state compact-empty">
+            <span class="material-icons">event_available</span>
+            <strong>No monthly records yet</strong>
+            <p>Attendance marks for the selected month will appear here.</p>
+          </div>
+        </article>
+
+        <article>
+          <div class="panel-heading compact-heading">
+            <div><p class="eyebrow">Yearly Calendar</p><h2>SY {{ schoolYearLabel() }}</h2></div>
+            <button type="button" class="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 text-xs font-black text-emerald-700" (click)="isYearCalendarExpanded.set(true)">
+              <span class="material-icons">open_in_full</span>
+              Expand Calendar
+            </button>
+          </div>
+          <div class="year-calendar-grid">
+            <div *ngFor="let monthIndex of schoolYearMonths">
+              <strong>{{ monthNames[monthIndex] }}</strong>
+              <span class="calendar-dots">
+                <b class="present" [style.width.%]="selectedAttendanceInsights().yearMonths[monthIndex].Present * 18"></b>
+                <b class="late" [style.width.%]="selectedAttendanceInsights().yearMonths[monthIndex].Late * 18"></b>
+                <b class="absent" [style.width.%]="selectedAttendanceInsights().yearMonths[monthIndex].Absent * 18"></b>
+                <b class="excused" [style.width.%]="selectedAttendanceInsights().yearMonths[monthIndex].Excused * 18"></b>
+              </span>
+              <small>P {{ selectedAttendanceInsights().yearMonths[monthIndex].Present }} • L {{ selectedAttendanceInsights().yearMonths[monthIndex].Late }} • E {{ selectedAttendanceInsights().yearMonths[monthIndex].Excused }} • A {{ selectedAttendanceInsights().yearMonths[monthIndex].Absent }}</small>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <div *ngIf="isYearCalendarExpanded() && selectedAttendanceStudent() as student" class="fixed inset-0 z-[90] grid place-items-center bg-slate-950/60 p-4 backdrop-blur-md" (click)="isYearCalendarExpanded.set(false)">
+    <section class="relative max-h-[94vh] w-[min(86rem,97vw)] overflow-auto rounded-2xl border border-emerald-200 bg-white p-5 shadow-2xl" (click)="$event.stopPropagation()">
+      <button class="dialog-close" type="button" aria-label="Close expanded calendar" (click)="isYearCalendarExpanded.set(false)">
+        <span class="material-icons">close</span>
+      </button>
+      <header class="mb-4 flex flex-col gap-3 pr-12 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p class="eyebrow">Expanded Attendance Calendar</p>
+          <h2 class="my-1 text-2xl font-black">{{ student.name }}</h2>
+          <small class="font-extrabold text-slate-500">SY {{ schoolYearLabel() }} • {{ selectedAttendanceSectionName() }} • {{ student.studentNo }}</small>
+        </div>
+        <div class="flex flex-wrap gap-2" aria-label="Attendance status legend">
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-black text-slate-600"><b class="h-2.5 w-2.5 rounded-full bg-emerald-500"></b> Present</span>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-black text-slate-600"><b class="h-2.5 w-2.5 rounded-full bg-amber-500"></b> Late</span>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-black text-slate-600"><b class="h-2.5 w-2.5 rounded-full bg-sky-400"></b> Excused</span>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-black text-slate-600"><b class="h-2.5 w-2.5 rounded-full bg-red-500"></b> Absent</span>
+        </div>
+      </header>
+
+      <div class="grid gap-3 lg:grid-cols-4 md:grid-cols-2">
+        <article *ngFor="let month of expandedYearCalendar()" class="rounded-xl border border-slate-200 bg-white p-3">
+          <div class="mb-2 flex items-start justify-between gap-2">
+            <strong class="text-base font-black">{{ month.name }} {{ month.calendarYear }}</strong>
+            <small class="text-right text-[0.68rem] font-black leading-tight text-slate-500">P {{ month.totals.Present }} • L {{ month.totals.Late }} • E {{ month.totals.Excused }} • A {{ month.totals.Absent }}</small>
+          </div>
+          <div class="mb-1 grid grid-cols-7 gap-1 text-center text-[0.6rem] font-black text-slate-400" aria-hidden="true">
+            <span>Sun</span>
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
+          </div>
+          <div class="grid grid-cols-7 gap-1">
+            <span
+              *ngFor="let day of month.days"
+              class="grid aspect-square place-items-center rounded-lg bg-slate-100 text-[0.72rem] font-black text-slate-500"
+              [ngClass]="attendanceCalendarDayClass(day)"
+              [style.background-color]="attendanceCalendarDayBackground(day)"
+              [style.color]="attendanceCalendarDayTextColor(day)"
+              [title]="attendanceCalendarDayTitle(day)"
+            >
+              {{ day.day || '' }}
+            </span>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <section *ngIf="currentView() === 'grades'" class="panel">
+    <div class="panel-heading">
+      <div><p class="eyebrow">Grades Management</p><h2>Learner Subject Gradebook</h2></div>
+      <div class="inline-controls">
+        <span class="gradebook-summary-pill">{{ state().classes.length }} subjects</span>
+        <select [ngModel]="selectedQuarter()" (ngModelChange)="selectedQuarter.set($event)">
+          <option *ngFor="let quarter of quarters" [value]="quarter">{{ quarter }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="gradebook-learner-list" *ngIf="gradeLearners().length">
+      <article
+        *ngFor="let student of gradeLearners(); trackBy: trackByStudentId"
+        class="grade-learner-card"
+        [ngClass]="{ expanded: expandedGradeStudentId() === student.id }"
+      >
+        <button type="button" class="grade-learner-toggle" (click)="toggleGradeLearner(student.id)">
+          <div class="learner-identity">
+            <span class="learner-avatar">
+              <img *ngIf="learnerAvatarSource(student); else gradeLearnerInitials" [src]="learnerAvatarSource(student)" [alt]="student.name + ' photo'" />
+              <ng-template #gradeLearnerInitials>{{ buildTeacherStudentInitials(student) }}</ng-template>
+            </span>
+            <span class="learner-copy">
+              <strong>{{ student.name }}</strong>
+              <small>{{ student.studentNo }} • {{ gradeSubjectsForStudent(student.id).length }} subjects</small>
+            </span>
+          </div>
+          <span class="grade-average-chip">{{ gradeLearnerSummaryAverage(student.id) ?? 'Pending' }}</span>
+          <span class="material-icons">{{ expandedGradeStudentId() === student.id ? 'expand_less' : 'expand_more' }}</span>
+        </button>
+
+        <div class="grade-subject-details" *ngIf="expandedGradeStudentId() === student.id">
+          <div class="grade-subject-row" *ngFor="let subject of gradeSubjectsForStudent(student.id)">
+            <div class="grade-subject-title">
+              <span class="material-icons">menu_book</span>
+              <div>
+                <strong>{{ subject.subject }}</strong>
+                <small>{{ subject.section }}</small>
+              </div>
+            </div>
+            <label>
+              <span>Quarter</span>
+              <select
+                [ngModel]="gradeSubjectQuarter(student.id, subject.id)"
+                (ngModelChange)="setGradeSubjectQuarter(student.id, subject.id, $event)"
+              >
+                <option *ngFor="let quarter of quarters" [value]="quarter">{{ quarter }}</option>
+              </select>
+            </label>
+            <label>
+              <span>Written</span>
+              <input type="number" min="0" max="100" [ngModel]="gradeValueForClass(subject.id, student.id, 'written')" (ngModelChange)="updateGradeForClass(subject.id, student.id, 'written', $event)" />
+            </label>
+            <label>
+              <span>Performance</span>
+              <input type="number" min="0" max="100" [ngModel]="gradeValueForClass(subject.id, student.id, 'performance')" (ngModelChange)="updateGradeForClass(subject.id, student.id, 'performance', $event)" />
+            </label>
+            <label>
+              <span>Exam</span>
+              <input type="number" min="0" max="100" [ngModel]="gradeValueForClass(subject.id, student.id, 'exam')" (ngModelChange)="updateGradeForClass(subject.id, student.id, 'exam', $event)" />
+            </label>
+            <div class="grade-subject-average">
+              <span>Average</span>
+              <strong>{{ averageForClassStudent(subject.id, student.id) ?? 'Pending' }}</strong>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+    <div *ngIf="!gradeLearners().length" class="empty-state">
+      <span class="material-icons">leaderboard</span>
+      <strong>No grade sheet available</strong>
+      <p>Grade input opens after assigned classes have learner rosters.</p>
+    </div>
+  </section>
+
+  <section *ngIf="currentView() === 'schedule'" class="schedule-planner-shell">
+    <article *ngFor="let day of scheduleWeekdays" class="class-day-board">
+      <header class="class-day-header">
+        <div>
+          <p class="eyebrow">Class Day</p>
+          <h2>{{ day }}</h2>
+        </div>
+        <button
+          type="button"
+          class="schedule-day-add"
+          [attr.aria-label]="'Add subject on ' + day"
+          [disabled]="!teacherSubjects().length"
+          (click)="openScheduleDialog(day)"
+        >
+          <span class="material-icons">add</span>
+        </button>
+      </header>
+
+      <div class="schedule-day-card">
+        <div
+          *ngFor="let entry of scheduleEntriesFor(day)"
+          class="schedule-lesson-card"
+        >
+          <div class="schedule-time-block">
+            <span class="material-icons">schedule</span>
+            <strong>{{ scheduleTimeLabel(entry.startTime).split(' ')[0] }}</strong>
+            <small>{{ scheduleTimeLabel(entry.startTime).split(' ')[1] }}</small>
+          </div>
+
+          <div class="schedule-card-divider" aria-hidden="true"></div>
+
+          <div class="schedule-subject-icon" [ngClass]="scheduleSubjectTone(entry.title)">
+            <span class="material-icons">{{ scheduleSubjectIcon(entry.title) }}</span>
+          </div>
+
+          <div class="schedule-subject-copy">
+            <strong>{{ entry.title }}</strong>
+            <p>{{ scheduleSubjectDescription(entry.title) }}</p>
+          </div>
+
+          <div class="schedule-entry-actions">
+            <button type="button" class="schedule-action edit" title="Edit" (click)="editScheduleEntry(entry)">
+              <span class="material-icons">edit</span>
+            </button>
+            <button type="button" class="schedule-action delete" title="Delete" (click)="deleteScheduleEntry(entry)">
+              <span class="material-icons">delete</span>
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="!scheduleEntriesFor(day).length" class="schedule-empty-state">
+          <span class="material-icons">event_available</span>
+          <strong>No subjects yet</strong>
+          <p>Add one or more system subjects for {{ day }}.</p>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <div *ngIf="scheduleDialogDay() as activeDay" class="schedule-entry-dialog fixed inset-0 z-[80] grid place-items-center bg-slate-950/50 p-4 backdrop-blur-sm" (click)="closeScheduleDialog()">
+    <section class="w-[min(28rem,94vw)] rounded-2xl border border-emerald-100 bg-white p-5 shadow-2xl" (click)="$event.stopPropagation()">
+      <header class="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <p class="eyebrow">{{ editingScheduleEntryId() ? 'Edit Schedule' : 'New Schedule' }}</p>
+          <h2 class="m-0 text-2xl font-black text-slate-900">{{ activeDay }}</h2>
+        </div>
+        <button type="button" class="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50" aria-label="Close schedule dialog" (click)="closeScheduleDialog()">
+          <span class="material-icons">close</span>
+        </button>
+      </header>
+
+      <form class="grid gap-3" (ngSubmit)="addScheduleEntry()">
+        <label class="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-500">
+          Day
+          <select class="min-h-11 rounded-xl border border-slate-200 px-3 text-sm font-bold normal-case tracking-normal text-slate-800" [ngModel]="scheduleDialogDay()" (ngModelChange)="scheduleDialogDay.set($event)" name="scheduleDay">
+            <option *ngFor="let day of scheduleWeekdays" [value]="day">{{ day }}</option>
+          </select>
+        </label>
+        <label class="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-500">
+          Subject
+          <select class="min-h-11 rounded-xl border border-slate-200 px-3 text-sm font-bold normal-case tracking-normal text-slate-800" [(ngModel)]="scheduleForm.title" name="scheduleTitle" required>
+            <option value="" disabled>Select assigned subject</option>
+            <option *ngFor="let subject of teacherSubjects()" [value]="subject">{{ subject }}</option>
+          </select>
+        </label>
+        <label class="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-500">
+          Start Time
+          <input class="min-h-11 rounded-xl border border-slate-200 px-3 text-sm font-bold normal-case tracking-normal text-slate-800" [(ngModel)]="scheduleForm.startTime" name="scheduleStartTime" type="time" required />
+        </label>
+        <button type="submit" class="primary mt-2 w-full justify-center" [disabled]="!teacherSubjects().length">
+          <span class="material-icons">{{ editingScheduleEntryId() ? 'save' : 'add_task' }}</span>
+          {{ editingScheduleEntryId() ? 'Update Schedule' : 'Create Schedule' }}
+        </button>
+      </form>
+    </section>
+  </div>
+
+  <section *ngIf="currentView() === 'resources'" class="panel">
+    <div class="panel-heading">
+      <div><p class="eyebrow">Learning Resources</p><h2>Materials Library</h2></div>
+      <input class="search-input" placeholder="Search resources..." [ngModel]="resourceSearch()" (ngModelChange)="resourceSearch.set($event)" />
+    </div>
+    <div *ngIf="!hasClasses()" class="empty-state">
+      <span class="material-icons">folder</span>
+      <strong>No resource library yet</strong>
+      <p>Resources are linked to official classes. Assign a class before uploading teaching materials.</p>
+    </div>
+    <form *ngIf="hasClasses()" class="form-grid compact" (ngSubmit)="addResource()">
+      <input [(ngModel)]="resourceForm.title" name="resourceTitle" placeholder="Resource title" required />
+      <select [(ngModel)]="resourceForm.type" name="resourceType"><option *ngFor="let type of resourceTypes" [value]="type">{{ type }}</option></select>
+      <input [(ngModel)]="resourceForm.subject" name="resourceSubject" placeholder="Subject" required />
+      <button class="primary" type="submit"><span class="material-icons">upload_file</span> Add Resource</button>
+    </form>
+    <div class="resource-list">
+      <div *ngFor="let resource of filteredResources()">
+        <span class="material-icons">description</span>
+        <div><strong>{{ resource.title }}</strong><p>{{ resource.subject }} • {{ resource.type }} • {{ resource.size }}</p></div>
+        <button (click)="teacherStore.deleteResource(resource.id)">Delete</button>
+      </div>
+      <div *ngIf="hasClasses() && !filteredResources().length" class="empty-state compact-empty">
+        <span class="material-icons">description</span>
+        <strong>No resources found</strong>
+        <p>Add a resource or adjust the search term.</p>
+      </div>
+    </div>
+  </section>
+
+  <section *ngIf="currentView() === 'dll'" class="panel">
+    <div class="panel-heading"><div><p class="eyebrow">Daily Lesson Log</p><h2>Create DLL Entry</h2></div></div>
+    <div *ngIf="!hasClasses()" class="empty-state">
+      <span class="material-icons">menu_book</span>
+      <strong>No class selected for DLL</strong>
+      <p>Daily Lesson Logs require an official class assignment before entries can be saved.</p>
+    </div>
+    <form *ngIf="hasClasses()" class="dll-form" (ngSubmit)="addDll()">
+      <textarea [(ngModel)]="dllForm.objectives" name="objectives" placeholder="Learning objectives" required></textarea>
+      <textarea [(ngModel)]="dllForm.activities" name="activities" placeholder="Activities" required></textarea>
+      <textarea [(ngModel)]="dllForm.materials" name="materials" placeholder="Materials used"></textarea>
+      <textarea [(ngModel)]="dllForm.remarks" name="remarks" placeholder="Remarks"></textarea>
+      <button class="primary" type="submit"><span class="material-icons">save</span> Save DLL</button>
+    </form>
+    <div class="timeline">
+      <div *ngFor="let dll of state().dlls">
+        <strong>{{ dll.date }} • {{ selectedClassSubjectName() }}</strong>
+        <p>{{ dll.objectives }}</p>
+        <button (click)="teacherStore.deleteDll(dll.id)">Delete</button>
+      </div>
+      <div *ngIf="hasClasses() && !state().dlls.length" class="empty-state compact-empty">
+        <span class="material-icons">history_edu</span>
+        <strong>No DLL entries yet</strong>
+        <p>Saved lesson logs will be listed here.</p>
+      </div>
+    </div>
+  </section>
+
+  <section *ngIf="currentView() === 'announcements'" class="panel">
+    <div class="panel-heading"><div><p class="eyebrow">Announcements</p><h2>Post Class Updates</h2></div></div>
+    <form class="form-grid" (ngSubmit)="addAnnouncement()">
+      <select [(ngModel)]="announcementForm.audience" name="audience">
+        <option>All students</option>
+        <option *ngFor="let section of state().classes">{{ section.section }}</option>
+      </select>
+      <input [(ngModel)]="announcementForm.title" name="announcementTitle" placeholder="Title" required />
+      <input class="span-2" [(ngModel)]="announcementForm.body" name="announcementBody" placeholder="Message" required />
+      <button class="primary" type="submit"><span class="material-icons">campaign</span> Post</button>
+    </form>
+    <div class="announcement-list">
+      <div *ngFor="let item of state().announcements">
+        <span>{{ item.audience }} • {{ item.postedAt }}</span>
+        <strong>{{ item.title }}</strong>
+        <p>{{ item.body }}</p>
+        <button (click)="teacherStore.deleteAnnouncement(item.id)">Delete</button>
+      </div>
+      <div *ngIf="!state().announcements.length" class="empty-state compact-empty">
+        <span class="material-icons">campaign</span>
+        <strong>No announcements posted</strong>
+        <p>Create a class or all-students announcement from the form above.</p>
+      </div>
+    </div>
+  </section>
+
+  <section *ngIf="currentView() === 'messages'" class="panel">
+    <div class="panel-heading"><div><p class="eyebrow">Messaging</p><h2>Teacher Communication</h2></div></div>
+    <form class="form-grid compact" (ngSubmit)="sendMessage()">
+      <input [(ngModel)]="messageForm.thread" name="thread" placeholder="Recipient or thread" />
+      <select [(ngModel)]="messageForm.audience" name="messageAudience"><option>Student</option><option>Parent</option><option>Admin</option></select>
+      <input [(ngModel)]="messageForm.message" name="message" placeholder="Type message..." required />
+      <button class="primary" type="submit"><span class="material-icons">send</span> Send</button>
+    </form>
+    <div class="message-list">
+      <div *ngFor="let message of state().messages">
+        <strong>{{ message.thread }}</strong>
+        <span>{{ message.audience }} • {{ message.sentAt }}</span>
+        <p>{{ message.message }}</p>
+      </div>
+      <div *ngIf="!state().messages.length" class="empty-state compact-empty">
+        <span class="material-icons">chat</span>
+        <strong>No messages yet</strong>
+        <p>Messages sent by this teacher will appear in this thread list.</p>
+      </div>
+    </div>
+  </section>
+
+  <section *ngIf="currentView() === 'analytics'" class="teacher-grid">
+    <article class="panel">
+      <div class="panel-heading"><div><p class="eyebrow">Attendance Trends</p><h2>Status Distribution</h2></div></div>
+      <div class="bar-list">
+        <div *ngFor="let status of attendanceStatuses"><span>{{ status }}</span><b [style.width.%]="attendanceSummary()[status] * 20 + 12"></b><strong>{{ attendanceSummary()[status] }}</strong></div>
+      </div>
+      <div *ngIf="!state().attendance.length" class="empty-state compact-empty">
+        <span class="material-icons">query_stats</span>
+        <strong>No attendance trend yet</strong>
+        <p>Attendance data will chart after daily marking starts.</p>
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-heading"><div><p class="eyebrow">Class Performance</p><h2>Completion Comparison</h2></div></div>
+      <div class="bar-list">
+        <div *ngFor="let section of state().classes"><span>{{ section.section }}</span><b [style.width.%]="classCompletionPercent(section)"></b><strong>{{ classCompletionPercent(section) }}%</strong></div>
+      </div>
+      <div *ngIf="!hasClasses()" class="empty-state compact-empty">
+        <span class="material-icons">stacked_bar_chart</span>
+        <strong>No class comparison yet</strong>
+        <p>Performance comparison needs assigned classes and grade entries.</p>
+      </div>
+    </article>
+  </section>
+
+  <section *ngIf="currentView() === 'settings'" class="panel">
+    <div class="panel-heading"><div><p class="eyebrow">Settings</p><h2>Account & Notifications</h2></div></div>
+    <form class="form-grid" (ngSubmit)="changePassword()">
+      <label>Current Password <input [(ngModel)]="passwordForm.current" name="currentPassword" type="password" /></label>
+      <label>New Password <input [(ngModel)]="passwordForm.next" name="newPassword" type="password" /></label>
+      <label>Confirm Password <input [(ngModel)]="passwordForm.confirm" name="confirmPassword" type="password" /></label>
+      <button class="primary" type="submit"><span class="material-icons">lock_reset</span> Change Password</button>
+    </form>
+    <div class="settings-toggles">
+      <label><input type="checkbox" checked /> Email notifications</label>
+      <label><input type="checkbox" checked /> Grade submission reminders</label>
+      <label><input type="checkbox" /> Dark theme preview</label>
+    </div>
+  </section>
+
+  <section *ngIf="currentView() === 'profiles'">
+    <div class="panel">
+      <div class="panel-heading">
+        <h2 class="text-xl font-bold">Academic Profiles</h2>
+        <div class="header-controls">
+          <select [ngModel]="selectedClassId()" (ngModelChange)="selectedClassId.set($event)" class="glass-input">
+            <option value="">-- Select Class --</option>
+            <option *ngFor="let c of state().classes" [value]="c.id">
+              Grade {{ c.gradeLevel }} - {{ c.sectionName }} ({{ c.subject }})
+            </option>
+          </select>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="profiles-grid" *ngIf="selectedClassStudents().length > 0">
+          <article *ngFor="let student of selectedClassStudents(); trackBy: trackByStudentId" class="profile-card">
+            <div class="card-header">
+              <div class="avatar-wrapper">
+                <img *ngIf="learnerAvatarSource(student) !== ''; else learnerInitials" [src]="learnerAvatarSource(student)" [alt]="student.name + ' photo'" class="avatar-img" />
+                <ng-template #learnerInitials>
+                  <div class="avatar-initials">{{ buildTeacherStudentInitials(student) }}</div>
+                </ng-template>
+                <div class="status-indicator"></div>
+              </div>
+            </div>
+            <div class="card-body">
+              <h3 class="learner-name">{{ student.name }}</h3>
+              <p class="learner-id">LRN: {{ student.studentNo }}</p>
+              <div class="learner-tags">
+                <span class="tag"><span class="material-icons">wc</span> {{ student.gender }}</span>
+                <span class="tag grade" *ngIf="averageFor(student.id)"><span class="material-icons">star</span> {{ averageFor(student.id) }}%</span>
+              </div>
+            </div>
+            <div class="card-footer">
+              <button type="button" class="dossier-btn" (click)="viewAcademicProfile(student)">
+                <span>View Dossier</span>
+                <span class="material-icons">arrow_forward</span>
+              </button>
+            </div>
+          </article>
+        </div>
+        
+        <div *ngIf="!selectedClass() || selectedClassStudents().length === 0" class="empty-state profiles-empty">
+          <div class="empty-icon">
+            <span class="material-icons">manage_search</span>
+          </div>
+          <h3>No Learners Found</h3>
+          <p>Please select a class from the dropdown above to view academic profiles.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dossier Modal Overlay -->
+  <div *ngIf="academicProfile() as profile" class="attendance-dialog-backdrop">
+    <div class="attendance-profile-dialog">
+      <button class="dialog-close" (click)="closeAcademicProfile()">
+        <span class="material-icons">close</span>
+      </button>
+
+      <header class="attendance-profile-header">
+        <div class="learner-avatar large">
+          <img *ngIf="profile.photoUrl; else initialLarge" [src]="profile.photoUrl" alt="Learner Photo">
+          <ng-template #initialLarge>{{ profile.firstName?.charAt(0) }}{{ profile.lastName?.charAt(0) }}</ng-template>
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold">{{ profile.firstName }} {{ profile.lastName }}</h2>
+          <p class="eyebrow" style="color: #64748b">LRN: {{ profile.lrn }} • {{ profile.gender }}</p>
+        </div>
+      </header>
+
+      <div class="attendance-total-grid">
+        <span class="col-span-1">
+          <small>Grade & Section</small>
+          <strong>Grade {{ profile.gradeLevel }} - {{ profile.section }}</strong>
+        </span>
+        <span class="col-span-1">
+          <small>Status</small>
+          <strong>{{ profile.enrollmentStatus }}</strong>
+        </span>
+        <span class="col-span-1">
+          <small>Adviser</small>
+          <strong class="text-sm truncate">{{ profile.adviser }}</strong>
+        </span>
+        <span class="col-span-1">
+          <small>Contact</small>
+          <strong class="text-sm truncate">{{ profile.contactNo }}</strong>
+        </span>
+      </div>
+
+      <div class="attendance-dialog-grid mt-4">
+        <article class="ai-insights bg-indigo-50/50 p-5 rounded-xl border border-indigo-100 flex flex-col justify-between" style="min-height: 200px;">
+          <div>
+            <h3 class="flex items-center gap-2 text-indigo-900 font-bold mb-3">
+              <span class="material-icons spark">auto_awesome</span>
+              AI Academic Insights
+            </h3>
+            <p class="insight-content mb-4 text-gray-600 text-sm font-medium leading-relaxed">
+               Get a deeper analysis of {{ profile.firstName }}'s academic performance, observed values, and attendance records using the SFXSAI AI Assistant.
+            </p>
+          </div>
+          <button type="button" class="primary w-full flex items-center justify-center gap-2 py-3 rounded-xl mt-auto shadow-sm" (click)="askDefaultAi(profile)">
+            <span class="material-icons text-base">chat</span> Analyze with Default AI
+          </button>
+        </article>
+        
+        <article class="ai-insights flex items-center justify-center p-8" *ngIf="isAcademicProfileLoading()">
+          <div class="spinner border-4 border-indigo-200 border-t-indigo-600 rounded-full w-8 h-8 animate-spin"></div>
+          <span class="ml-3 text-indigo-800 font-medium">Analyzing learner data...</span>
+        </article>
+
+        <article>
+          <h3 class="compact-heading font-bold text-gray-800 mb-2 border-b pb-2">Academic Performance (SF9)</h3>
+          <div class="table-wrap">
+            <table class="w-full text-left">
+              <thead>
+                <tr>
+                  <th class="py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Subject</th>
+                  <th class="py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Q1</th>
+                  <th class="py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Q2</th>
+                  <th class="py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Q3</th>
+                  <th class="py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Q4</th>
+                  <th class="py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Final</th>
+                  <th class="py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Remarks</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr *ngFor="let grade of profile.grades">
+                  <td class="py-2 font-medium text-gray-900">{{ grade.subject }}</td>
+                  <td class="py-2 text-center">{{ grade.q1 || '-' }}</td>
+                  <td class="py-2 text-center">{{ grade.q2 || '-' }}</td>
+                  <td class="py-2 text-center">{{ grade.q3 || '-' }}</td>
+                  <td class="py-2 text-center">{{ grade.q4 || '-' }}</td>
+                  <td class="py-2 text-center font-bold">{{ grade.finalGrade || '-' }}</td>
+                  <td class="py-2 text-center">
+                    <span *ngIf="grade.finalGrade" class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="grade.finalGrade >= 75 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                      {{ grade.finalGrade >= 75 ? 'Passed' : 'Failed' }}
+                    </span>
+                    <span *ngIf="!grade.finalGrade" class="text-gray-400">-</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="col-span-2">
+          <h3 class="compact-heading font-bold text-gray-800 mb-2 border-b pb-2">Learner's Observed Values (Core Values)</h3>
+          <div class="table-wrap">
+            <table class="w-full text-left">
+              <thead>
+                <tr>
+                  <th class="py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/4">Core Value</th>
+                  <th class="py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider w-1/2">Behavioral Statements</th>
+                  <th class="py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Q1</th>
+                  <th class="py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Q2</th>
+                  <th class="py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Q3</th>
+                  <th class="py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Q4</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr *ngFor="let cv of profile.coreValues">
+                  <td class="py-2 font-medium text-gray-900">{{ cv.coreValue }}</td>
+                  <td class="py-2 text-sm text-gray-600">{{ cv.behavioralStatement }}</td>
+                  <td class="py-2 text-center font-medium">{{ cv.q1 || '-' }}</td>
+                  <td class="py-2 text-center font-medium">{{ cv.q2 || '-' }}</td>
+                  <td class="py-2 text-center font-medium">{{ cv.q3 || '-' }}</td>
+                  <td class="py-2 text-center font-medium">{{ cv.q4 || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="mt-2 text-xs text-gray-500 flex gap-4">
+            <span><strong>Marking:</strong></span>
+            <span><strong>AO:</strong> Always Observed</span>
+            <span><strong>SO:</strong> Sometimes Observed</span>
+            <span><strong>RO:</strong> Rarely Observed</span>
+            <span><strong>NO:</strong> Not Observed</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </div>
+</div>
+
+

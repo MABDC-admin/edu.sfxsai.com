@@ -1,0 +1,445 @@
+<ng-container *ngIf="canShow()">
+  <button type="button" class="ai-assistant-launcher" (click)="assistant.toggle()" aria-label="Open AI Assistant">
+    <span class="ai-launcher-glow"></span>
+    <span class="material-icons">{{ assistant.isOpen() ? 'auto_awesome' : 'psychology' }}</span>
+    <strong>AI</strong>
+  </button>
+
+  <section class="ai-assistant-overlay" *ngIf="assistant.isOpen()" aria-label="AI Assistant">
+    <header class="ai-assistant-header">
+      <div class="ai-assistant-title">
+        <span class="material-icons">psychology</span>
+        <div>
+          <p>St Francis Xavier Smart Academy Inc</p>
+          <h2>AI Assistant</h2>
+        </div>
+      </div>
+
+      <nav class="ai-workspace-tabs" aria-label="AI workspace tabs">
+        <button
+          *ngFor="let tab of assistant.workspaceTabs"
+          type="button"
+          [class.active]="assistant.activeWorkspaceTab() === tab"
+          (click)="setWorkspaceTab(tab)"
+        >
+          <span class="material-icons">{{ tab === 'AI Assistant' ? 'auto_awesome' : tab === 'Quipper' ? 'menu_book' : tab === 'Phoenix' ? 'local_library' : 'image' }}</span>
+          {{ tab }}
+        </button>
+      </nav>
+
+      <div class="ai-chat-controls" *ngIf="assistant.activeWorkspaceTab() === 'AI Assistant'">
+        <div class="ai-mode-switch" role="group" aria-label="AI response layout">
+          <button
+            type="button"
+            [class.active]="chatViewMode === 'single'"
+            [disabled]="assistant.isLoading()"
+            (click)="setChatViewMode('single')"
+          >
+            <span class="material-icons">chat_bubble</span>
+            Single
+          </button>
+          <button
+            type="button"
+            [class.active]="chatViewMode === 'dual'"
+            [disabled]="assistant.isLoading()"
+            (click)="setChatViewMode('dual')"
+          >
+            <span class="material-icons">view_column</span>
+            Dual
+          </button>
+        </div>
+        <button type="button" (click)="startNewChat()" aria-label="Start new AI chat">
+          <span class="material-icons">add_comment</span>
+          New Chat
+        </button>
+        <button type="button" (click)="toggleHistory()" aria-label="Toggle chat history">
+          <span class="material-icons">history</span>
+          History
+        </button>
+        <button type="button" class="danger" *ngIf="assistant.isLoading()" (click)="assistant.stopResponse()" aria-label="Stop AI response">
+          <span class="material-icons">stop_circle</span>
+          Stop
+        </button>
+      </div>
+
+      <button type="button" class="ai-close-button" (click)="assistant.close()" aria-label="Close AI Assistant">
+        <span class="material-icons">close</span>
+      </button>
+    </header>
+
+    <div class="ai-assistant-body" *ngIf="assistant.activeWorkspaceTab() === 'AI Assistant'">
+      <aside class="ai-prompt-rail">
+        <section class="ai-history-panel" *ngIf="isHistoryOpen">
+          <div class="ai-history-heading">
+            <span>Chat History</span>
+            <button type="button" (click)="startNewChat()" aria-label="Start new chat from history">
+              <span class="material-icons">add</span>
+            </button>
+          </div>
+          <div class="ai-history-list">
+            <article
+              *ngFor="let session of assistant.sessions()"
+              class="ai-history-item"
+              [class.active]="assistant.activeSessionId() === session.id"
+            >
+              <button type="button" class="ai-history-open" (click)="assistant.openSession(session.id)">
+                <strong>{{ session.title }}</strong>
+                <span>{{ session.messages.length }} messages</span>
+              </button>
+              <button type="button" (click)="renameChat(session.id, session.title)" aria-label="Rename chat">
+                <span class="material-icons">edit</span>
+              </button>
+              <button type="button" (click)="deleteChat(session.id)" aria-label="Delete chat">
+                <span class="material-icons">delete</span>
+              </button>
+            </article>
+          </div>
+        </section>
+
+      </aside>
+
+      <main class="ai-chat-workspace">
+        <div class="ai-message-list" [class.ai-dual-response-grid]="chatViewMode === 'dual'" #messageList (scroll)="onMessageListScroll()" (wheel)="onMessageListWheel($event)">
+          <article
+            *ngFor="let message of assistant.messages(); trackBy: trackMessage; let last = last"
+            class="ai-message"
+            [ngClass]="{ 'from-user': message.role === 'user', 'from-assistant': message.role === 'assistant' }"
+            [class.is-pending]="message.role === 'assistant' && assistant.isLoading() && !message.content.trim() && (last || !!message.dualGroupId)"
+            [class.is-streaming]="message.role === 'assistant' && assistant.isLoading() && !!message.content.trim() && (last || !!message.dualGroupId)"
+            [class.dual-response]="message.dualGroupId"
+          >
+            <div class="ai-message-meta">
+              <strong>{{ message.role === 'user' ? 'You' : (message.modelLabel || 'AI Assistant') }}</strong>
+              <div class="ai-response-actions" *ngIf="message.role === 'assistant' && message.content.trim()">
+                <button type="button" (click)="copyResponse(message)" aria-label="Copy response text">
+                  <span class="material-icons">content_copy</span>
+                  Copy
+                </button>
+                <button type="button" (click)="copyResponseMarkdown(message)" aria-label="Copy response as Markdown">
+                  <span class="material-icons">markdown</span>
+                  Markdown
+                </button>
+                <button type="button" (click)="assistant.downloadResponsePdf(message)" aria-label="Download response as PDF">
+                  <span class="material-icons">picture_as_pdf</span>
+                  PDF
+                </button>
+                <button type="button" (click)="assistant.regenerateLastResponse()" [disabled]="assistant.isLoading()" aria-label="Regenerate latest response">
+                  <span class="material-icons">autorenew</span>
+                  Regenerate
+                </button>
+                <button type="button" (click)="assistant.continueLastResponse()" [disabled]="assistant.isLoading()" aria-label="Continue latest response">
+                  <span class="material-icons">more_horiz</span>
+                  Continue
+                </button>
+              </div>
+            </div>
+            <ng-container *ngIf="message.role === 'assistant' && assistant.isLoading() && !message.content.trim() && (last || !!message.dualGroupId); else renderedMessage">
+              <div class="ai-thinking-card" aria-live="polite">
+                <div class="ai-thinking-orb">
+                  <span class="material-icons">auto_awesome</span>
+                </div>
+                <div class="ai-thinking-copy">
+                  <strong>Preparing your answer</strong>
+                  <div class="ai-thinking-steps">
+                    <span>Reading your request...</span>
+                    <span>Checking available context...</span>
+                    <span>Structuring the response...</span>
+                  </div>
+                  <div class="ai-thinking-skeleton">
+                    <i></i><i></i><i></i>
+                  </div>
+                </div>
+                <button type="button" class="ai-stop-inline" (click)="assistant.stopResponse()">
+                  <span class="material-icons">stop_circle</span>
+                  Stop
+                </button>
+              </div>
+            </ng-container>
+            <ng-template #renderedMessage>
+              <div class="ai-markdown" [innerHTML]="renderMarkdown(message)" (click)="handleMarkdownAction($event)"></div>
+              <span class="ai-stream-cursor" *ngIf="message.role === 'assistant' && assistant.isLoading() && (last || !!message.dualGroupId)" aria-hidden="true"></span>
+              <div class="ai-followup-chips" *ngIf="message.role === 'assistant' && message.content.trim() && message.id !== 'welcome'">
+                <button type="button" (click)="sendFollowUp('Make it more detailed')">
+                  <span class="material-icons">format_align_left</span>
+                  Make detailed
+                </button>
+                <button type="button" (click)="sendFollowUp('Make it shorter')">
+                  <span class="material-icons">short_text</span>
+                  Make shorter
+                </button>
+                <button type="button" (click)="sendFollowUp('Create a quiz from this answer')">
+                  <span class="material-icons">quiz</span>
+                  Create quiz
+                </button>
+                <button type="button" (click)="sendFollowUp('Turn this into a worksheet')">
+                  <span class="material-icons">assignment</span>
+                  Worksheet
+                </button>
+                <button type="button" (click)="sendFollowUp('Translate this for parents')">
+                  <span class="material-icons">translate</span>
+                  Translate
+                </button>
+              </div>
+            </ng-template>
+          </article>
+        </div>
+
+        <p class="ai-error" *ngIf="assistant.error()">{{ assistant.error() }}</p>
+        <form class="ai-compose" (ngSubmit)="send()">
+          <textarea
+            #messageInput
+            [(ngModel)]="draftText"
+            name="aiAssistantPrompt"
+            rows="3"
+            placeholder="Ask the school AI assistant..."
+            (keydown)="onKeydown($event)"
+          ></textarea>
+          <button type="submit" [disabled]="!draftText.trim() || !assistant.canSend()">
+            <span class="material-icons">send</span>
+            Send
+          </button>
+        </form>
+      </main>
+    </div>
+
+    <section class="ai-resource-workspace" *ngIf="assistant.activeWorkspaceTab() === 'Quipper'">
+      <div class="ai-resource-toolbar">
+        <div class="ai-resource-title">
+          <span>Learning Resources</span>
+          <strong>Quipper</strong>
+        </div>
+        <a [href]="assistant.resourceUrls['Quipper']" target="_blank" rel="noopener noreferrer">
+          <span class="material-icons">open_in_new</span>
+          Open
+        </a>
+      </div>
+      <iframe
+        class="ai-resource-frame"
+        [src]="resourceFrameUrls['Quipper']"
+        title="Quipper viewer"
+      ></iframe>
+    </section>
+
+    <section class="ai-phoenix-workspace" *ngIf="assistant.activeWorkspaceTab() === 'Phoenix'">
+      <aside class="ai-phoenix-sidebar">
+        <div class="ai-phoenix-toolbar">
+          <div>
+            <p>Phoenix Books</p>
+            <h3>{{ activePhoenixGrade()?.name || activePhoenixGrade()?.id || 'Library' }}</h3>
+          </div>
+          <button type="button" (click)="loadPhoenixBooks()">
+            <span class="material-icons">refresh</span>
+          </button>
+        </div>
+
+        <select
+          class="ai-phoenix-select"
+          [ngModel]="activePhoenixGrade()?.id || ''"
+          (ngModelChange)="selectPhoenixGrade($event)"
+          aria-label="Select Phoenix grade level"
+        >
+          <option *ngFor="let grade of phoenixGrades" [value]="grade.id">
+            {{ grade.name || grade.id }} ({{ grade.books?.length || 0 }})
+          </option>
+        </select>
+
+        <input
+          class="ai-phoenix-search"
+          type="search"
+          [(ngModel)]="phoenixSearch"
+          placeholder="Search Phoenix books..."
+        />
+
+        <div class="ai-phoenix-state" *ngIf="isPhoenixLoading">Loading Phoenix books...</div>
+        <div class="ai-phoenix-state error" *ngIf="!isPhoenixLoading && phoenixError">{{ phoenixError }}</div>
+
+        <div class="ai-phoenix-book-grid" *ngIf="!isPhoenixLoading && !phoenixError">
+          <button
+            *ngFor="let book of filteredPhoenixBooks()"
+            type="button"
+            class="ai-phoenix-book"
+            [class.active]="selectedPhoenixBook?.slug === book.slug && selectedPhoenixBook?.gradeId === book.gradeId"
+            (click)="selectPhoenixBook(book)"
+            [title]="book.title"
+          >
+            <img [src]="getPhoenixThumbnailUrl(book)" [alt]="book.title + ' first page thumbnail'" loading="lazy" />
+            <span>{{ book.title }}</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="ai-phoenix-reader">
+        <ng-container *ngIf="selectedPhoenixBook; else phoenixEmpty">
+          <div class="ai-phoenix-reader-header">
+            <div>
+              <p>Phoenix Book</p>
+              <h3>{{ selectedPhoenixBook.title }}</h3>
+            </div>
+            <div class="ai-phoenix-page-controls">
+              <div class="ai-phoenix-view-controls" aria-label="Phoenix reader view controls">
+                <button type="button" (click)="setPhoenixZoom(phoenixZoom - 10)" aria-label="Zoom out">
+                  <span class="material-icons">zoom_out</span>
+                </button>
+                <button type="button" (click)="setPhoenixZoom(100)" aria-label="Reset zoom">{{ phoenixZoom }}%</button>
+                <button type="button" (click)="setPhoenixZoom(phoenixZoom + 10)" aria-label="Zoom in">
+                  <span class="material-icons">zoom_in</span>
+                </button>
+                <button type="button" [class.active]="phoenixReaderMode === 'single'" (click)="setPhoenixReaderMode('single')" aria-label="Single page view">
+                  <span class="material-icons">crop_portrait</span>
+                </button>
+                <button type="button" [class.active]="phoenixReaderMode === 'flip'" (click)="setPhoenixReaderMode('flip')" aria-label="Flip two-page view">
+                  <span class="material-icons">auto_stories</span>
+                </button>
+              </div>
+              <button type="button" (click)="setPhoenixPage(phoenixPage - 1)" [disabled]="phoenixPage <= 1">
+                <span class="material-icons">chevron_left</span>
+              </button>
+              <input
+                type="number"
+                [ngModel]="phoenixPage"
+                (ngModelChange)="setPhoenixPage($event)"
+                min="1"
+                [max]="selectedPhoenixBook.pageCount || 1"
+              />
+              <span>/ {{ selectedPhoenixBook.pageCount || '-' }}</span>
+              <button type="button" (click)="setPhoenixPage(phoenixPage + 1)" [disabled]="phoenixPage >= (selectedPhoenixBook.pageCount || 1)">
+                <span class="material-icons">chevron_right</span>
+              </button>
+            </div>
+          </div>
+          <div class="ai-phoenix-annotation-tools" aria-label="Phoenix annotation tools">
+            <button type="button" [class.active]="phoenixTool === 'pointer'" (click)="setPhoenixTool('pointer')"><span class="material-icons">near_me</span> Pointer</button>
+            <button type="button" [class.active]="phoenixTool === 'pen'" (click)="setPhoenixTool('pen')"><span class="material-icons">draw</span> Pen</button>
+            <button type="button" [class.active]="phoenixTool === 'line'" (click)="setPhoenixTool('line')"><span class="material-icons">show_chart</span> Line</button>
+            <button type="button" [class.active]="phoenixTool === 'circle'" (click)="setPhoenixTool('circle')"><span class="material-icons">radio_button_unchecked</span> Circle</button>
+            <button type="button" [class.active]="phoenixTool === 'box'" (click)="setPhoenixTool('box')"><span class="material-icons">check_box_outline_blank</span> Box</button>
+            <button type="button" [class.active]="phoenixTool === 'move'" (click)="setPhoenixTool('move')"><span class="material-icons">open_with</span> Move</button>
+            <button type="button" [class.active]="phoenixTool === 'delete'" (click)="setPhoenixTool('delete')"><span class="material-icons">delete</span> Delete</button>
+            <input type="color" [(ngModel)]="phoenixAnnotationColor" aria-label="Annotation color" />
+            <input type="range" min="2" max="12" [(ngModel)]="phoenixAnnotationSize" aria-label="Annotation size" />
+          </div>
+          <div class="ai-phoenix-page-stage" [class.flip-view]="phoenixReaderMode === 'flip'">
+            <div
+              *ngFor="let page of phoenixVisiblePages()"
+              class="ai-phoenix-page-sheet"
+              [style.transform]="phoenixPageTransform()"
+            >
+              <img [src]="getPhoenixPageUrl(selectedPhoenixBook, page)" [alt]="selectedPhoenixBook.title + ' page ' + page" />
+              <div class="ai-phoenix-annotation-layer" [attr.data-tool]="phoenixTool">
+                <span
+                  class="ai-phoenix-annotation-sample"
+                  [ngClass]="'tool-' + phoenixTool"
+                  [style.border-color]="phoenixAnnotationColor"
+                  [style.color]="phoenixAnnotationColor"
+                  [style.border-width.px]="phoenixAnnotationSize"
+                ></span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #phoenixEmpty>
+          <div class="ai-phoenix-empty">
+            <span class="material-icons">local_library</span>
+            <h3>Select a Phoenix book</h3>
+            <p>Choose a grade and book from the left panel.</p>
+          </div>
+        </ng-template>
+      </main>
+    </section>
+
+    <section class="ai-image-workspace" *ngIf="assistant.activeWorkspaceTab() === 'Image Generation'">
+      <aside class="ai-image-composer">
+        <div class="ai-image-heading">
+          <span class="material-icons">image</span>
+          <div>
+            <p>Grok Imagine</p>
+            <h3>Image Generation</h3>
+          </div>
+        </div>
+
+        <form class="ai-image-form" (ngSubmit)="generateImage()">
+          <label>
+            Prompt
+            <textarea
+              [(ngModel)]="imagePrompt"
+              name="imagePrompt"
+              rows="8"
+              placeholder="Describe a school-safe poster, worksheet illustration, classroom visual, or learning aid..."
+            ></textarea>
+          </label>
+
+          <div class="ai-image-options">
+            <label>
+              Ratio
+              <select [(ngModel)]="imageAspectRatio" name="imageAspectRatio">
+                <option value="1:1">Square 1:1</option>
+                <option value="16:9">Wide 16:9</option>
+                <option value="9:16">Portrait 9:16</option>
+                <option value="4:3">Classroom 4:3</option>
+                <option value="3:4">Poster 3:4</option>
+                <option value="3:2">Landscape 3:2</option>
+                <option value="2:3">Tall 2:3</option>
+              </select>
+            </label>
+
+            <label>
+              Size
+              <select [(ngModel)]="imageSize" name="imageSize">
+                <option value="1K">1K</option>
+                <option value="2K">2K</option>
+              </select>
+            </label>
+          </div>
+
+          <button type="submit" [disabled]="!imagePrompt.trim() || isImageGenerating">
+            <span class="material-icons">{{ isImageGenerating ? 'hourglass_top' : 'auto_awesome' }}</span>
+            {{ isImageGenerating ? 'Generating...' : 'Generate Image' }}
+          </button>
+        </form>
+
+        <div class="ai-image-note">
+          <strong>School-safe output</strong>
+          <p>Use this for classroom visuals, event posters, learning materials, and worksheet illustrations.</p>
+        </div>
+      </aside>
+
+      <main class="ai-image-gallery-panel">
+        <div class="ai-image-gallery-header">
+          <div>
+            <p>Generated Results</p>
+            <h3>{{ generatedImages.length ? generatedImages.length + ' saved in this session' : 'Ready to create' }}</h3>
+          </div>
+        </div>
+
+        <p class="ai-phoenix-state error" *ngIf="imageGenerationError">{{ imageGenerationError }}</p>
+
+        <div class="ai-image-loading" *ngIf="isImageGenerating">
+          <span class="material-icons">auto_awesome</span>
+          <strong>Generating image with Grok Imagine...</strong>
+          <p>This can take a moment depending on provider load.</p>
+        </div>
+
+        <div class="ai-image-empty" *ngIf="!isImageGenerating && !generatedImages.length">
+          <span class="material-icons">wallpaper</span>
+          <h3>No images yet</h3>
+          <p>Write a detailed prompt and generate your first classroom visual.</p>
+        </div>
+
+        <div class="ai-image-gallery" *ngIf="generatedImages.length">
+          <article class="ai-generated-image-card" *ngFor="let image of generatedImages">
+            <img [src]="image.url" [alt]="image.alt" loading="lazy" />
+            <div>
+              <strong>{{ image.alt }}</strong>
+              <button type="button" (click)="openGeneratedImage(image)">
+                <span class="material-icons">open_in_new</span>
+                Open
+              </button>
+            </div>
+          </article>
+        </div>
+      </main>
+    </section>
+  </section>
+</ng-container>
+
+

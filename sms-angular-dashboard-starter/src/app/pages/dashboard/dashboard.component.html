@@ -1,0 +1,388 @@
+<section class="space-y-7">
+  <div class="portal-hero-theme relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-800 to-indigo-900 p-4 sm:p-6 flex items-center shadow-lg border border-violet-700">
+    <!-- Video placed at the end part with a tightly constrained width to make it smaller, perfectly masked on the left -->
+    <div class="absolute inset-y-0 right-0 w-[40%] max-w-[300px] pointer-events-none" 
+         style="-webkit-mask-image: linear-gradient(to right, transparent 0%, black 50%); mask-image: linear-gradient(to right, transparent 0%, black 50%);">
+      <video autoplay loop muted playsinline [muted]="true" [autoplay]="true" class="w-full h-full object-cover object-center opacity-80 mix-blend-luminosity">
+        <source src="/assets/hero-banner.mp4" type="video/mp4" />
+      </video>
+    </div>
+    
+    <div class="relative z-10 flex max-w-3xl items-center gap-4">
+      <span class="dashboard-hero-avatar">
+        <img
+          *ngIf="currentUser?.avatarUrl; else dashboardHeroInitial"
+          [src]="currentUser?.avatarUrl"
+          [alt]="(currentUser?.email || 'SFXSAI user') + ' photo'"
+        />
+        <ng-template #dashboardHeroInitial>{{ (currentUser?.email || role || 'S').slice(0, 1) }}</ng-template>
+      </span>
+      <div class="min-w-0">
+        <p class="text-[10px] font-extrabold uppercase tracking-widest text-violet-300">{{ activeAcademicYearCode }}</p>
+        <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-white sm:text-3xl drop-shadow-sm">
+          <span class="dashboard-hero-typing">
+            <span class="dashboard-hero-typing-text">👋 Welcome back, <span class="capitalize">{{ role ? (role | lowercase) : 'Admin' }}</span>!</span>
+          </span>
+        </h1>
+        <p class="mt-1 text-xs font-medium leading-tight text-white/90">
+          Manage enrollment, learner records<span *ngIf="role !== 'REGISTRAR'">, billing, payments, and finance clearance</span> in one connected dashboard.
+        </p>
+
+        <div class="mt-4 flex flex-wrap gap-2.5">
+          <button *ngIf="role === 'REGISTRAR'" routerLink="../student-registration" class="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-[13px] font-extrabold text-violet-700 shadow-md transition hover:bg-slate-50 hover:-translate-y-0.5 hover:shadow-lg">
+            <span class="material-icons text-[18px]">person_add</span>
+            New Enrollment
+          </button>
+          <button *ngIf="role !== 'REGISTRAR'" routerLink="../payments" class="inline-flex items-center gap-1.5 rounded-xl border border-white/60 bg-white/10 px-4 py-2 text-[13px] font-extrabold text-white backdrop-blur transition hover:bg-white/20 hover:-translate-y-0.5">
+            <span class="material-icons text-[18px]">payments</span>
+            Record Payment
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section *ngIf="shouldShowRegistrarOverview(role)">
+    <div class="flex flex-wrap items-end gap-2 px-1">
+      <h2 class="text-xl font-extrabold tracking-tight text-slate-900">📊 Registrar Overview</h2>
+      <p class="pb-0.5 text-xs font-semibold text-slate-500">Student records, enrollment, documents, and sectioning</p>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <app-stat-card *ngFor="let stat of registrarStats" [stat]="stat" />
+    </div>
+
+    <!-- NEW DASHBOARD WIDGETS -->
+    <ng-container *ngIf="registrarMetrics as metrics">
+      <!-- Row 2: Trend, Grade Level, Recent Enrollees -->
+      <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-4">
+        <!-- Widget 1: Mini Calendar -->
+        <article class="registrar-events-panel col-span-1 lg:col-span-2">
+          <header class="registrar-events-header">
+            <div class="registrar-events-title">
+              <span class="material-icons">calendar_month</span>
+              <div>
+                <h3>Upcoming Events & Holidays</h3>
+                <p>Stay ahead of important dates and never miss a thing.</p>
+              </div>
+            </div>
+            <div class="registrar-events-actions">
+              <button routerLink="../calendar" type="button" class="registrar-events-full-view">
+                <span>Full View</span>
+                <span class="material-icons">arrow_forward</span>
+              </button>
+              <button routerLink="../calendar" type="button" class="registrar-events-calendar-button" aria-label="Open school calendar">
+                <span class="material-icons">calendar_month</span>
+              </button>
+            </div>
+          </header>
+
+          <div class="registrar-events-list">
+            <div *ngIf="calendarEvents.length === 0" class="registrar-events-empty">
+              No upcoming events scheduled.
+            </div>
+            <a
+              *ngFor="let event of calendarEvents.slice(0, 5)"
+              class="registrar-event-card"
+              [ngClass]="eventToneClass(event.eventType)"
+              routerLink="../calendar">
+              <div class="registrar-event-icon-panel">
+                <span class="registrar-event-icon material-icons">{{ eventTypeIcon(event.eventType) }}</span>
+              </div>
+              <div class="registrar-event-content">
+                <h4>{{ event.title }}</h4>
+                <span class="registrar-event-pill">{{ event.eventType || 'Event' }}</span>
+              </div>
+              <div class="registrar-event-date">
+                <span class="material-icons">calendar_today</span>
+                <strong>{{ event.eventDate | date:'MMM d' }}</strong>
+                <small>{{ event.eventDate | date:'EEEE' }}</small>
+              </div>
+            </a>
+          </div>
+        </article>
+
+        <!-- Widget 2: Students by Grade Level -->
+        <article class="col-span-1 flex flex-col bg-white rounded-xl shadow-sm border border-slate-100 p-4">
+          <div class="flex items-center justify-between text-xs font-extrabold uppercase tracking-wider text-slate-500">
+            <span>By Grade Level</span>
+            <span class="material-icons rounded bg-blue-50 text-blue-600 p-1 text-[18px]">pie_chart</span>
+          </div>
+          <div class="flex-1 mt-4 flex flex-col items-center justify-center gap-4">
+            <!-- Donut Chart -->
+            <div class="w-28 h-28 rounded-full relative shadow-inner shrink-0 animate-donut" [style.background]="metrics.gradeConicGradient">
+              <div class="absolute inset-[15%] bg-white rounded-full shadow-sm flex flex-col items-center justify-center">
+                <span class="text-sm font-bold text-slate-700 leading-none">{{ metrics.totalStudents }}</span>
+                <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Total</span>
+              </div>
+            </div>
+            <!-- Legend -->
+            <div class="w-full flex-1 overflow-y-auto pr-1 grid grid-cols-2 gap-x-2 gap-y-2.5 content-start">
+              <div *ngFor="let grade of metrics.gradeLevelStats" class="flex items-start gap-1.5">
+                <div class="w-2 h-2 rounded-full shrink-0 mt-1" [style.background]="grade.color"></div>
+                <div class="flex flex-col min-w-0">
+                  <span class="text-[10px] font-bold text-slate-700 truncate leading-tight" [title]="grade.grade">{{ grade.grade }}</span>
+                  <span class="text-[9px] font-medium text-slate-500 leading-tight">{{ grade.count }} ({{ grade.percent }}%)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Widget 3: Recent Enrollees -->
+        <article class="col-span-1 flex flex-col bg-white rounded-xl shadow-sm border border-slate-100 p-4">
+          <div class="flex items-center justify-between text-xs font-extrabold uppercase tracking-wider text-slate-500">
+            <span>Recent Enrollees</span>
+            <span class="material-icons rounded bg-emerald-50 text-emerald-600 p-1 text-[18px]">how_to_reg</span>
+          </div>
+          <div class="flex-1 mt-4 flex flex-col gap-3">
+            <div *ngFor="let student of metrics.recentEnrollees" class="flex items-center gap-3">
+              <div class="h-8 w-8 rounded-full bg-violet-100 flex items-center justify-center text-violet-700 font-bold text-xs shrink-0">
+                {{ student.firstName[0] }}{{ student.lastName[0] }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-xs font-bold text-slate-900 truncate">{{ student.firstName }} {{ student.lastName }}</p>
+                <p class="text-[10px] text-slate-500 truncate">{{ student.gradeLevel }}</p>
+              </div>
+              <div class="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+                {{ student.enrollmentSubmittedAt || student.lastUpdated | date:'MMM d' }}
+              </div>
+            </div>
+            <div *ngIf="!metrics.recentEnrollees?.length" class="text-xs text-slate-500 italic text-center my-auto">No recent enrollees</div>
+          </div>
+        </article>
+      </div>
+
+      <!-- Row 3: Document Requests, Section Capacity, Quick Actions -->
+      <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-4">
+        <!-- Widget 4: Recent Document Requests -->
+        <article class="col-span-1 lg:col-span-2 flex flex-col bg-white rounded-xl shadow-sm border border-slate-100 p-4">
+          <div class="flex items-center justify-between text-xs font-extrabold uppercase tracking-wider text-slate-500">
+            <span>Recent Document Requests</span>
+            <span class="material-icons rounded bg-amber-50 text-amber-600 p-1 text-[18px]">description</span>
+          </div>
+          <div class="flex-1 mt-4 overflow-x-auto">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+              <thead>
+                <tr class="text-slate-500 border-b border-slate-100">
+                  <th class="pb-2 font-semibold">Request No.</th>
+                  <th class="pb-2 font-semibold">Student Name</th>
+                  <th class="pb-2 font-semibold">Document Type</th>
+                  <th class="pb-2 font-semibold text-right">Requested</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-50">
+                <tr *ngFor="let req of metrics.recentDocumentRequests">
+                  <td class="py-2.5 font-semibold text-indigo-600">{{ req.requestNo }}</td>
+                  <td class="py-2.5 font-bold text-slate-700">{{ req.studentName }}</td>
+                  <td class="py-2.5 text-slate-600">{{ req.documentType }}</td>
+                  <td class="py-2.5 text-slate-500 text-right">{{ req.requestedAt | date:'MMM d, y' }}</td>
+                </tr>
+                <tr *ngIf="!metrics.recentDocumentRequests?.length">
+                  <td colspan="4" class="py-4 text-center text-slate-500 italic">No document requests found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <!-- Widget 5: Section Capacity -->
+        <article class="col-span-1 flex flex-col bg-white rounded-xl shadow-sm border border-slate-100 p-4">
+          <div class="flex items-center justify-between text-xs font-extrabold uppercase tracking-wider text-slate-500">
+            <span>Section Capacity</span>
+            <span class="material-icons rounded bg-rose-50 text-rose-600 p-1 text-[18px]">group_work</span>
+          </div>
+          <div class="flex-1 mt-6 flex flex-col gap-4 overflow-y-auto pr-2">
+            <div *ngFor="let sec of metrics.sectionCapacity" class="flex flex-col gap-1.5">
+              <div class="flex justify-between items-center text-xs">
+                <span class="font-bold text-slate-800">{{ sec.section }}</span>
+                <span class="text-slate-500 font-medium">{{ sec.enrolled }}/{{ sec.capacity }}</span>
+              </div>
+              <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all" 
+                     [ngClass]="{'bg-rose-500': sec.utilization > 90, 'bg-amber-400': sec.utilization > 75 && sec.utilization <= 90, 'bg-emerald-500': sec.utilization <= 75}"
+                     [style.width.%]="sec.utilization"></div>
+              </div>
+            </div>
+            <div *ngIf="!metrics.sectionCapacity?.length" class="text-xs text-slate-500 italic text-center my-auto">No sections configured.</div>
+          </div>
+        </article>
+
+        <!-- Widget 6: Quick Actions -->
+        <article class="col-span-1 flex flex-col bg-slate-50 rounded-xl shadow-sm border border-slate-200 p-4">
+          <div class="flex items-center justify-between text-xs font-extrabold uppercase tracking-wider text-slate-500">
+            <span>Quick Actions</span>
+            <span class="material-icons rounded bg-slate-200 text-slate-600 p-1 text-[18px]">flash_on</span>
+          </div>
+          <div class="flex-1 mt-4 grid grid-cols-2 gap-2">
+            <button routerLink="../student-registration" class="flex flex-col items-center justify-center gap-1.5 rounded-xl bg-white p-3 text-violet-700 shadow-sm border border-slate-200 transition hover:bg-violet-600 hover:text-white hover:border-violet-600 hover:-translate-y-0.5">
+              <span class="material-icons">person_add</span>
+              <span class="text-[10px] font-bold text-center leading-tight">New<br>Enrollment</span>
+            </button>
+            <button routerLink="../sections" class="flex flex-col items-center justify-center gap-1.5 rounded-xl bg-white p-3 text-emerald-600 shadow-sm border border-slate-200 transition hover:bg-emerald-600 hover:text-white hover:border-emerald-600 hover:-translate-y-0.5">
+              <span class="material-icons">class</span>
+              <span class="text-[10px] font-bold text-center leading-tight">Manage<br>Sections</span>
+            </button>
+            <button routerLink="../documents" class="flex flex-col items-center justify-center gap-1.5 rounded-xl bg-white p-3 text-amber-600 shadow-sm border border-slate-200 transition hover:bg-amber-600 hover:text-white hover:border-amber-600 hover:-translate-y-0.5">
+              <span class="material-icons">description</span>
+              <span class="text-[10px] font-bold text-center leading-tight">Doc<br>Requests</span>
+            </button>
+            <button routerLink="../reports" class="flex flex-col items-center justify-center gap-1.5 rounded-xl bg-white p-3 text-blue-600 shadow-sm border border-slate-200 transition hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:-translate-y-0.5">
+              <span class="material-icons">assessment</span>
+              <span class="text-[10px] font-bold text-center leading-tight">Generate<br>Reports</span>
+            </button>
+          </div>
+        </article>
+      </div>
+    </ng-container>
+  </section>
+
+  <section class="finance-dashboard-export" *ngIf="role !== 'REGISTRAR' && financeDashboard as finance">
+    <div class="flex flex-wrap items-end justify-between gap-3 px-1">
+      <div class="flex flex-wrap items-end gap-2">
+        <h2 class="text-xl font-extrabold tracking-tight text-slate-900">Finance Overview</h2>
+        <p class="pb-0.5 text-xs font-semibold text-slate-500">Live assessment, payment, collection, and finance-control metrics</p>
+      </div>
+            <button class="finance-dashboard-report-button" type="button" (click)="downloadFinanceDashboardReportPdf()" [disabled]="!activeAcademicYearId">
+        <span class="material-icons">picture_as_pdf</span>
+        Export PDF
+      </button>
+    </div>
+
+    <div class="finance-widget-grid finance-overview-grid mt-4">
+      <article class="finance-widget finance-card finance-card--metric metric-card">
+        <div class="widget-heading">
+          <span>Total Revenue</span>
+          <span class="material-icons">payments</span>
+        </div>
+        <strong>{{ formatPeso(finance.totalRevenue) }}</strong>
+        <p>{{ finance.totalRevenueCard.helper }}</p>
+      </article>
+
+      <article class="finance-widget finance-card finance-card--assessed metric-card assessed-card">
+        <div class="widget-heading">
+          <span>Total Assessed</span>
+          <span class="material-icons">fact_check</span>
+        </div>
+        <strong>{{ formatPeso(finance.totalAssessed) }}</strong>
+        <p>{{ finance.totalAssessedCard.helper }}</p>
+        <small>{{ finance.totalAssessedCard.assessmentCount }} assessment{{ finance.totalAssessedCard.assessmentCount === 1 ? '' : 's' }} recorded</small>
+      </article>
+
+      <article class="finance-widget finance-card finance-card--receivables metric-card">
+        <div class="widget-heading">
+          <span>Accounts Receivable & Collection Status</span>
+          <span class="material-icons">request_quote</span>
+        </div>
+        <strong>{{ formatPeso(finance.accountsReceivable) }}</strong>
+        <p>{{ finance.receivablesCard.openAccountsCount }} open learner account{{ finance.receivablesCard.openAccountsCount === 1 ? '' : 's' }}</p>
+        <div class="progress-track"><i [style.width.%]="finance.collectionRate"></i></div>
+        <div class="finance-receivables-summary mt-3">
+          <div *ngFor="let row of finance.receivablesCard.summaryRows" class="finance-data-row flex items-center justify-between gap-3 text-xs">
+            <span class="font-semibold text-slate-500">{{ row.label }}</span>
+            <strong class="text-slate-800">{{ formatPeso(row.value) }}</strong>
+          </div>
+        </div>
+        <div class="finance-card-meta mt-3 flex items-center justify-between gap-3 text-xs text-slate-500">
+          <span class="finance-trend-badge">{{ finance.collectionRate }}% collected</span>
+          <span>{{ finance.paidStudents }} cleared / {{ finance.unpaidStudents }} pending</span>
+        </div>
+        <button routerLink="../billing-summary" class="finance-inline-cta mt-4 inline-flex items-center gap-2 self-start rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-700">
+          <span class="material-icons text-[16px]">summarize</span>
+          Review Open Accounts
+        </button>
+      </article>
+
+      <article class="finance-widget finance-card finance-card--alerts alerts-card">
+        <div class="widget-heading">
+          <span>Financial Alerts / Reminders</span>
+          <span class="material-icons">notifications_active</span>
+        </div>
+        <div class="alert-list">
+          <div *ngFor="let alert of finance.alertRows" [ngClass]="'alert-' + alert.tone" class="finance-alert-row flex items-start justify-between gap-3">
+            <div class="min-w-0 space-y-1">
+              <strong>{{ alert.title }}</strong>
+              <span>{{ alert.description }}</span>
+            </div>
+            <button
+              type="button"
+              [routerLink]="alert.actionLabel === 'Review Accounts' ? '../billing-summary' : '../billing-assessment'"
+              class="finance-inline-cta shrink-0 rounded-lg border border-current/20 bg-white/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide transition hover:bg-white"
+            >
+              {{ alert.actionLabel }}
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <article class="finance-widget finance-card finance-card--forecast chart-card">
+        <div class="widget-heading">
+          <span>Trends & Forecasts</span>
+          <span class="material-icons">trending_up</span>
+        </div>
+        <strong>{{ formatPeso(finance.forecast.value) }}</strong>
+        <p>{{ finance.forecast.label }}</p>
+        <small class="finance-trend-badge">{{ finance.forecast.comparisonText }}</small>
+        <div class="forecast-line-chart mt-4" aria-hidden="true">
+          <svg class="h-28 w-full overflow-visible" viewBox="0 0 100 40" preserveAspectRatio="none">
+            <line x1="0" y1="36" x2="100" y2="36" stroke="#cbd5e1" stroke-width="1" />
+            <line x1="0" y1="24" x2="100" y2="24" stroke="#e2e8f0" stroke-width="0.75" stroke-dasharray="2 2" />
+            <line x1="0" y1="12" x2="100" y2="12" stroke="#e2e8f0" stroke-width="0.75" stroke-dasharray="2 2" />
+            <ng-container *ngFor="let point of finance.forecast.points; index as i">
+              <line
+                *ngIf="i < finance.forecast.points.length - 1"
+                [attr.x1]="finance.forecast.points.length === 1 ? 50 : (i * 100) / (finance.forecast.points.length - 1)"
+                [attr.y1]="36 - ((point.percent || 8) * 0.28)"
+                [attr.x2]="((i + 1) * 100) / (finance.forecast.points.length - 1)"
+                [attr.y2]="36 - ((finance.forecast.points[i + 1].percent || 8) * 0.28)"
+                stroke="#4f46e5"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <circle
+                [attr.cx]="finance.forecast.points.length === 1 ? 50 : (i * 100) / (finance.forecast.points.length - 1)"
+                [attr.cy]="36 - ((point.percent || 8) * 0.28)"
+                r="2.5"
+                fill="#ffffff"
+                stroke="#4f46e5"
+                stroke-width="2"
+              />
+            </ng-container>
+          </svg>
+          <div class="mt-3 flex items-start justify-between gap-2">
+            <div *ngFor="let point of finance.forecast.points" class="min-w-0 flex-1 text-center">
+              <span class="block truncate text-[10px] font-semibold text-slate-500">{{ point.label }}</span>
+              <span class="block truncate text-[10px] text-slate-400">{{ formatPeso(point.amount) }}</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="finance-widget finance-card finance-card--birthdays birthday-card">
+        <div class="widget-heading">
+          <span>Upcoming Learner Birthdays</span>
+          <span class="material-icons">cake</span>
+        </div>
+        <div class="birthday-list" *ngIf="upcomingBirthdays.length; else noBirthdays">
+          <div *ngFor="let birthday of upcomingBirthdays" class="flex items-center justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <span class="birthday-date">{{ birthday.dateLabel }}</span>
+              <div>
+                <strong>{{ birthday.learnerName }}</strong>
+                <small>{{ displayGradeLevel(birthday.gradeLevel) }} · {{ birthday.daysUntil === 0 ? 'Today' : birthday.daysUntil + ' days' }}</small>
+              </div>
+            </div>
+            <button routerLink="../billing-assessment" class="finance-inline-cta inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[10px] font-bold text-amber-700 transition hover:bg-amber-100">
+              <span class="material-icons text-[14px]">receipt_long</span>
+              Open Account
+            </button>
+          </div>
+        </div>
+        <ng-template #noBirthdays>
+          <p class="empty-widget-note">No incoming learner birthdays in the next 30 days.</p>
+        </ng-template>
+      </article>
+    </div>
+  </section>
+
+</section>

@@ -1,0 +1,271 @@
+<section class="academic-records page-shell">
+  <div class="ptoast"
+       [class.ptoast-show]="toast.show"
+       [ngClass]="{
+         'ptoast-success': toast.type === 'success',
+         'ptoast-error': toast.type === 'error',
+         'ptoast-info': toast.type === 'info'
+       }">
+    <span class="material-icons">{{ toast.type === 'error' ? 'error' : toast.type === 'info' ? 'info' : 'check_circle' }}</span>
+    <div>
+      <strong>{{ toast.title }}</strong>
+      <p>{{ toast.message }}</p>
+    </div>
+  </div>
+
+  <header class="records-hero">
+    <div>
+      <p class="records-kicker">Registrar Module</p>
+      <h1>Academic Records</h1>
+      <p>Validate learner academic history, promotion remarks, and school-year records used for SF9 and SF10 preparation.</p>
+    </div>
+    <div class="hero-actions">
+      <button type="button" class="secondary-action" (click)="printRecords()">
+        <span class="material-icons">print</span>
+        Print View
+      </button>
+      <button type="button" class="secondary-action" (click)="exportCsv()">
+        <span class="material-icons">download</span>
+        Export CSV
+      </button>
+      <button type="button" class="primary-action" (click)="openCreateModal()">
+        <span class="material-icons">add_circle</span>
+        Add Record
+      </button>
+    </div>
+  </header>
+
+  <div class="records-stats">
+    <article class="stat-card stat-total">
+      <span class="material-icons">history_edu</span>
+      <div>
+        <p>Total Records</p>
+        <strong>{{ stats.total }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="material-icons">verified</span>
+      <div>
+        <p>Validated</p>
+        <strong>{{ stats.validated }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="material-icons">rate_review</span>
+      <div>
+        <p>For Review</p>
+        <strong>{{ stats.forReview }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="material-icons">trending_up</span>
+      <div>
+        <p>Promoted</p>
+        <strong>{{ stats.promoted }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="material-icons">priority_high</span>
+      <div>
+        <p>Retained / Incomplete</p>
+        <strong>{{ stats.retainedOrIncomplete }}</strong>
+      </div>
+    </article>
+  </div>
+
+  <section class="records-panel">
+    <div class="records-toolbar">
+      <div>
+        <h2>Learner Academic History</h2>
+        <p>{{ filteredRecords.length }} records shown across selected school-year boundaries</p>
+      </div>
+      <div class="records-filters">
+        <label class="record-search">
+          <span class="material-icons">search</span>
+          <input
+            [(ngModel)]="searchTerm"
+            name="academicSearch"
+            placeholder="Search learner, remarks, grade, section..." />
+        </label>
+        <select [(ngModel)]="selectedGrade" name="academicGrade">
+          <option *ngFor="let grade of grades" [value]="grade.value">{{ grade.label }}</option>
+        </select>
+        <select [(ngModel)]="selectedYear" name="academicYear">
+          <option *ngFor="let year of schoolYears" [value]="year">{{ year }}</option>
+        </select>
+        <select [(ngModel)]="selectedStatus" name="academicStatus">
+          <option *ngFor="let status of statuses" [value]="status">{{ status }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="records-state">
+      <span class="material-icons animate-spin">sync</span>
+      Loading academic records...
+    </div>
+
+    <div *ngIf="!isLoading && filteredRecords.length === 0" class="records-state">
+      <span class="material-icons">plagiarism</span>
+      No academic records match the current filters.
+    </div>
+
+    <div *ngIf="!isLoading && filteredRecords.length > 0" class="records-desktop-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Learner</th>
+            <th>School Year</th>
+            <th>Grade / Section</th>
+            <th>General Average</th>
+            <th>Remarks</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let record of filteredRecords; trackBy: trackRecord">
+            <td>
+              <div class="learner-cell">
+                <span>{{ record.studentName.charAt(0) }}</span>
+                <div>
+                  <strong>{{ record.studentName }}</strong>
+                  <small>{{ displayGradeLevel(record.gradeLevel) }} academic history</small>
+                </div>
+              </div>
+            </td>
+            <td>{{ record.schoolYear }}</td>
+            <td>
+              <strong>{{ displayGradeLevel(record.gradeLevel) }}</strong>
+              <small>{{ record.section || 'No section' }}</small>
+            </td>
+            <td>
+              <span class="average-score">{{ record.generalAverage }}</span>
+            </td>
+            <td class="remarks-cell">{{ record.remarks }}</td>
+            <td>
+              <span class="status-pill" [ngClass]="statusClass(record.status)">{{ statusTone(record.status) }}</span>
+            </td>
+            <td>
+              <div class="row-actions">
+                <button type="button" title="Edit" (click)="openEditModal(record)">
+                  <span class="material-icons">edit</span>
+                </button>
+                <button type="button" title="Validate" (click)="validateRecord(record)" [disabled]="statusTone(record.status) === 'Validated'">
+                  <span class="material-icons">fact_check</span>
+                </button>
+                <button type="button" title="Delete" (click)="deleteRecord(record)">
+                  <span class="material-icons">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="!isLoading && filteredRecords.length > 0" class="records-mobile-grid">
+      <article *ngFor="let record of filteredRecords; trackBy: trackRecord" class="record-card">
+        <div class="record-card-head">
+          <div>
+            <p>{{ record.schoolYear }}</p>
+            <h3>{{ record.studentName }}</h3>
+          </div>
+          <span class="status-pill" [ngClass]="statusClass(record.status)">{{ statusTone(record.status) }}</span>
+        </div>
+        <div class="record-card-body">
+          <div>
+            <span>Grade / Section</span>
+            <strong>{{ displayGradeLevel(record.gradeLevel) }} · {{ record.section || 'No section' }}</strong>
+          </div>
+          <div>
+            <span>General Average</span>
+            <strong>{{ record.generalAverage }}</strong>
+          </div>
+          <div class="card-wide">
+            <span>Remarks</span>
+            <strong>{{ record.remarks }}</strong>
+          </div>
+        </div>
+        <div class="record-card-actions">
+          <button type="button" (click)="openEditModal(record)">Edit</button>
+          <button type="button" (click)="validateRecord(record)" [disabled]="statusTone(record.status) === 'Validated'">Validate</button>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="timeline-panel" *ngIf="!isLoading && filteredRecords.length > 0">
+    <div class="timeline-head">
+      <div>
+        <h2>Validation Timeline</h2>
+        <p>Recent records ordered by school year and learner name.</p>
+      </div>
+    </div>
+    <div class="timeline-list">
+      <article *ngFor="let record of filteredRecords.slice(0, 6)">
+        <span class="timeline-dot"></span>
+        <div>
+          <p>{{ record.schoolYear }} · {{ displayGradeLevel(record.gradeLevel) }}</p>
+          <h3>{{ record.studentName }}</h3>
+          <small>{{ record.remarks }} · Average {{ record.generalAverage }}</small>
+        </div>
+        <span class="status-pill" [ngClass]="statusClass(record.status)">{{ statusTone(record.status) }}</span>
+      </article>
+    </div>
+  </section>
+
+  <div class="modal-backdrop" *ngIf="isModalOpen" (click)="closeModal()">
+    <section class="record-modal" (click)="$event.stopPropagation()">
+      <header>
+        <div>
+          <p>{{ modalMode === 'create' ? 'New Academic Record' : 'Edit Academic Record' }}</p>
+          <h2>{{ modalMode === 'create' ? 'Add Learner Academic History' : formData.studentName }}</h2>
+        </div>
+        <button type="button" (click)="closeModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </header>
+
+      <form class="record-form" (ngSubmit)="saveRecord()" #recordForm="ngForm">
+        <label>
+          Learner Name
+          <input [(ngModel)]="formData.studentName" name="studentName" required />
+        </label>
+        <label>
+          School Year
+          <input [(ngModel)]="formData.schoolYear" name="schoolYear" required />
+        </label>
+        <label>
+          Grade Level
+          <select [(ngModel)]="formData.gradeLevel" name="gradeLevel" required>
+            <option value="" disabled>Select grade</option>
+            <option *ngFor="let grade of grades" [value]="grade.value" [disabled]="grade.value === 'All'">{{ grade.label }}</option>
+          </select>
+        </label>
+        <label>
+          Section
+          <input [(ngModel)]="formData.section" name="section" />
+        </label>
+        <label>
+          General Average
+          <input [(ngModel)]="formData.generalAverage" name="generalAverage" required />
+        </label>
+        <label>
+          Status
+          <select [(ngModel)]="formData.status" name="status" required>
+            <option *ngFor="let status of statuses" [value]="status" [disabled]="status === 'All'">{{ status }}</option>
+          </select>
+        </label>
+        <label class="form-wide">
+          Remarks
+          <textarea [(ngModel)]="formData.remarks" name="remarks" rows="3"></textarea>
+        </label>
+
+        <footer>
+          <button type="button" class="modal-ghost" (click)="closeModal()">Cancel</button>
+          <button type="submit" class="modal-primary" [disabled]="recordForm.invalid">Save Record</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+</section>

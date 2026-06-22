@@ -1,0 +1,80 @@
+import { EnrollmentApplicationsService } from './enrollment-applications.service';
+export declare class EnrollmentApplicationsController {
+    private readonly enrollmentApplicationsService;
+    constructor(enrollmentApplicationsService: EnrollmentApplicationsService);
+    create(createDto: any): Promise<{
+        id: string;
+        gradeLevel: string;
+        section: string | null;
+        studentType: string;
+        documentStatus: string;
+        financeStatus: string;
+        academicYearId: string | null;
+        studentName: string;
+        remarks: string | null;
+        status: string;
+        applicationNo: string;
+        submittedAt: string;
+        reviewedBy: string | null;
+    }>;
+    findAll(ayId?: string): Promise<{
+        id: string;
+        gradeLevel: string;
+        section: string | null;
+        studentType: string;
+        documentStatus: string;
+        financeStatus: string;
+        academicYearId: string | null;
+        studentName: string;
+        remarks: string | null;
+        status: string;
+        applicationNo: string;
+        submittedAt: string;
+        reviewedBy: string | null;
+    }[]>;
+    findOne(id: string): Promise<{
+        id: string;
+        gradeLevel: string;
+        section: string | null;
+        studentType: string;
+        documentStatus: string;
+        financeStatus: string;
+        academicYearId: string | null;
+        studentName: string;
+        remarks: string | null;
+        status: string;
+        applicationNo: string;
+        submittedAt: string;
+        reviewedBy: string | null;
+    } | undefined>;
+    update(id: string, updateDto: any): Promise<{
+        id: string;
+        applicationNo: string;
+        studentName: string;
+        gradeLevel: string;
+        studentType: string;
+        status: string;
+        documentStatus: string;
+        financeStatus: string;
+        submittedAt: string;
+        reviewedBy: string | null;
+        remarks: string | null;
+        academicYearId: string | null;
+        section: string | null;
+    }>;
+    remove(id: string): Promise<{
+        id: string;
+        gradeLevel: string;
+        section: string | null;
+        studentType: string;
+        documentStatus: string;
+        financeStatus: string;
+        academicYearId: string | null;
+        studentName: string;
+        remarks: string | null;
+        status: string;
+        applicationNo: string;
+        submittedAt: string;
+        reviewedBy: string | null;
+    }>;
+}

@@ -1,0 +1,808 @@
+:host {
+  display: block;
+}
+
+.dashboard-hero-avatar {
+  display: grid;
+  width: clamp(8.125rem, 10.4vw, 8.75rem);
+  height: clamp(8.125rem, 10.4vw, 8.75rem);
+  flex: 0 0 clamp(8.125rem, 10.4vw, 8.75rem);
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 1.55rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  box-shadow:
+    0 18px 36px -22px rgba(15, 23, 42, 0.85),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.dashboard-hero-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dashboard-hero-typing {
+  display: inline-flex;
+  max-width: 100%;
+  vertical-align: bottom;
+}
+
+.dashboard-hero-typing-text {
+  display: inline-flex;
+  position: relative;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  animation: dashboardHeroTyping 5.5s steps(30, end) infinite;
+}
+
+.dashboard-hero-typing-text::after {
+  content: '';
+  width: 2px;
+  min-height: 1em;
+  margin-left: .1rem;
+  align-self: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  animation: dashboardHeroCaret .8s step-end infinite;
+}
+
+.registrar-events-panel {
+  display: flex;
+  min-height: 120px;
+  flex-direction: column;
+  gap: .35rem;
+  border: 1px solid rgba(199, 210, 254, 0.5);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 92% 8%, rgba(236, 72, 153, 0.08), transparent 28%),
+    radial-gradient(circle at 6% 10%, rgba(59, 130, 246, 0.08), transparent 30%),
+    linear-gradient(135deg, #ffffff 0%, #fbfaff 48%, #fff7fb 100%);
+  box-shadow:
+    0 24px 55px rgba(79, 70, 229, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  padding: .5rem;
+}
+
+.registrar-events-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .35rem;
+}
+
+.registrar-events-title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .35rem;
+}
+
+.registrar-events-title > .material-icons,
+.registrar-events-calendar-button {
+  display: grid;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ede9fe 0%, #f5f3ff 100%);
+  color: #5b4df4;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.registrar-events-title h3 {
+  margin: 0;
+  color: #081537;
+  font-size: .95rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1.05;
+}
+
+.registrar-events-title p {
+  display: none;
+}
+
+.registrar-events-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: .35rem;
+}
+
+.registrar-events-full-view {
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  border: 1px solid #c4b5fd;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.74);
+  color: #5b4df4;
+  padding: 0 .5rem;
+  font-size: .62rem;
+  font-weight: 950;
+  box-shadow: 0 10px 28px rgba(91, 77, 244, 0.08);
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.registrar-events-calendar-button {
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.registrar-events-full-view:hover,
+.registrar-events-calendar-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(91, 77, 244, 0.16);
+}
+
+.registrar-events-list {
+  display: grid;
+  gap: .35rem;
+}
+
+.registrar-event-card {
+  display: grid;
+  min-height: 2.45rem;
+  grid-template-columns: 2.8rem minmax(0, 1fr) 4.1rem;
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  color: inherit;
+  text-decoration: none;
+  box-shadow:
+    0 18px 34px rgba(15, 23, 42, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.registrar-event-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 26px 44px rgba(15, 23, 42, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.registrar-event-icon-panel {
+  display: grid;
+  position: relative;
+  place-items: center;
+  border-right: 3px solid var(--event-accent);
+  background: linear-gradient(135deg, var(--event-soft) 0%, rgba(255, 255, 255, 0.86) 100%);
+}
+
+.registrar-event-icon {
+  display: grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  place-items: center;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--event-accent-light) 0%, var(--event-accent) 100%);
+  color: #fff;
+  font-size: .9rem;
+  box-shadow: 0 16px 30px var(--event-shadow);
+}
+
+.registrar-event-content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  padding: .25rem .45rem;
+}
+
+.registrar-event-content h4 {
+  margin: 0;
+  color: #081537;
+  font-size: .72rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.registrar-event-pill {
+  display: none;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: .18rem;
+  border-radius: 10px;
+  background: var(--event-pill-bg);
+  color: var(--event-accent);
+  padding: .16rem .32rem;
+  font-size: .58rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.registrar-event-date {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  border-left: 1px solid rgba(203, 213, 225, 0.8);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.56) 0%, var(--event-date-soft) 100%);
+  padding: .25rem;
+  text-align: center;
+}
+
+.registrar-event-date .material-icons {
+  display: none;
+  width: 1.2rem;
+  height: 1.2rem;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--event-pill-bg);
+  color: var(--event-accent);
+  font-size: .62rem;
+}
+
+.registrar-event-date strong {
+  display: block;
+  margin-top: .1rem;
+  color: var(--event-accent);
+  font-size: .62rem;
+  font-weight: 950;
+  line-height: 1.05;
+}
+
+.registrar-event-date small {
+  display: block;
+  margin-top: .04rem;
+  color: #64748b;
+  font-size: .58rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.registrar-event-card.event-tone-holiday {
+  --event-accent: #ef2f38;
+  --event-accent-light: #ff6168;
+  --event-soft: #fff1f2;
+  --event-date-soft: #fff7f7;
+  --event-pill-bg: #fee8ea;
+  --event-shadow: rgba(239, 47, 56, 0.26);
+}
+
+.registrar-event-card.event-tone-meeting {
+  --event-accent: #2f6fec;
+  --event-accent-light: #56a0ff;
+  --event-soft: #eff6ff;
+  --event-date-soft: #f5f9ff;
+  --event-pill-bg: #e6f0ff;
+  --event-shadow: rgba(47, 111, 236, 0.24);
+}
+
+.registrar-event-card.event-tone-exam {
+  --event-accent: #f97316;
+  --event-accent-light: #ffb02e;
+  --event-soft: #fff7ed;
+  --event-date-soft: #fffaf1;
+  --event-pill-bg: #ffedd5;
+  --event-shadow: rgba(249, 115, 22, 0.22);
+}
+
+.registrar-event-card.event-tone-other {
+  --event-accent: #7c3aed;
+  --event-accent-light: #a78bfa;
+  --event-soft: #f5f3ff;
+  --event-date-soft: #fbfaff;
+  --event-pill-bg: #ede9fe;
+  --event-shadow: rgba(124, 58, 237, 0.22);
+}
+
+.registrar-events-empty {
+  display: grid;
+  min-height: 12rem;
+  place-items: center;
+  border: 1px dashed rgba(167, 139, 250, 0.46);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.58);
+  color: #64748b;
+  font-size: .58rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.finance-widget-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1.1rem;
+}
+
+.finance-widget {
+  grid-column: span 3;
+  min-width: 0;
+  min-height: 178px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 28px rgba(15, 23, 42, 0.06);
+  padding: 1.05rem;
+}
+
+.widget-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+  color: #475569;
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.widget-heading .material-icons {
+  display: grid;
+  width: 2.1rem;
+  height: 2.1rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 1.05rem;
+}
+
+.finance-widget strong {
+  display: block;
+  margin-top: .8rem;
+  color: #0f172a;
+  font-size: 1.5rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.finance-widget p {
+  margin: .35rem 0 0;
+  color: #64748b;
+  font-size: .79rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.progress-track {
+  height: .65rem;
+  margin-top: 1rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dbeafe;
+}
+
+.progress-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0f766e 0%, #2563eb 55%, #60a5fa 100%);
+}
+
+.finance-overview-grid {
+  align-items: stretch;
+}
+
+.finance-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.finance-card--metric,
+.finance-card--assessed {
+  grid-column: span 3;
+}
+
+.finance-card--receivables {
+  grid-column: span 6;
+}
+
+.finance-card--alerts,
+.finance-card--forecast,
+.finance-card--birthdays {
+  grid-column: span 4;
+}
+
+.finance-card small {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 1rem;
+  color: #64748b;
+  font-size: .72rem;
+  font-weight: 800;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.finance-card--assessed small {
+  border-radius: 999px;
+  background: #f8fafc;
+  padding: .3rem .65rem;
+}
+
+.finance-card--receivables {
+  position: relative;
+}
+
+.finance-receivables-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .6rem .75rem;
+}
+
+.finance-data-row {
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: .65rem .75rem;
+}
+
+.finance-data-row strong {
+  margin-top: 0;
+  font-size: .95rem;
+  text-align: right;
+}
+
+.finance-card-meta {
+  flex-wrap: wrap;
+}
+
+.finance-trend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: .35rem .65rem;
+  font-size: .72rem;
+  font-weight: 900;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.finance-inline-cta {
+  min-height: 2.25rem;
+  border-radius: 10px;
+  white-space: normal;
+  text-align: left;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+.alert-list {
+  display: grid;
+  gap: .7rem;
+  margin-top: .95rem;
+}
+
+.alert-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .75rem;
+  align-items: start;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+  padding: .75rem .8rem;
+}
+
+.alert-list strong {
+  margin: 0;
+  font-size: .83rem;
+  line-height: 1.3;
+}
+
+.alert-list span {
+  color: #334155;
+  font-size: .62rem;
+  font-weight: 800;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.alert-danger {
+  background: linear-gradient(180deg, #fff1f2 0%, #fff 100%);
+}
+
+.alert-danger strong {
+  color: #be123c;
+}
+
+.alert-warning {
+  background: linear-gradient(180deg, #fffbeb 0%, #fff 100%);
+}
+
+.alert-warning strong {
+  color: #92400e;
+}
+
+.alert-neutral {
+  background: linear-gradient(180deg, #f0f9ff 0%, #fff 100%);
+}
+
+.alert-neutral strong {
+  color: #075985;
+}
+
+.forecast-line-chart {
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #f8fbff 0%, #fff 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  padding: .5rem;
+}
+
+.finance-card--forecast .forecast-line-chart {
+  padding-bottom: .85rem;
+}
+
+.birthday-list {
+  display: grid;
+  gap: .7rem;
+  margin-top: .95rem;
+}
+
+.birthday-list > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: .7rem;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: .75rem;
+}
+
+.birthday-date {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: .35rem .6rem;
+  font-size: .7rem;
+  font-weight: 950;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.birthday-list strong {
+  margin: .35rem 0 0;
+  color: #0f172a;
+  font-size: .72rem;
+  line-height: 1.15;
+}
+
+.birthday-list small {
+  display: block;
+  margin-top: .2rem;
+  color: #64748b;
+  font-size: .62rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.empty-widget-note {
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: .95rem;
+}
+
+@media (max-width: 1280px) {
+  .finance-card--metric,
+  .finance-card--assessed,
+  .finance-card--alerts,
+  .finance-card--forecast,
+  .finance-card--birthdays {
+    grid-column: span 6;
+  }
+
+  .finance-card--receivables {
+    grid-column: span 12;
+  }
+}
+
+@media (max-width: 900px) {
+  .registrar-events-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .registrar-events-actions {
+    width: 100%;
+  }
+
+  .registrar-events-full-view {
+    flex: 1 1 auto;
+  }
+
+  .registrar-event-card {
+    grid-template-columns: minmax(6.75rem, 7.5rem) minmax(0, 1fr);
+  }
+
+  .registrar-event-date {
+    grid-column: 1 / -1;
+    grid-template-columns: auto auto auto;
+    justify-content: start;
+    gap: .35rem;
+    border-top: 1px solid rgba(203, 213, 225, 0.75);
+    border-left: 0;
+    text-align: left;
+  }
+
+  .registrar-event-date strong,
+  .registrar-event-date small {
+    margin-top: 0;
+    align-self: center;
+  }
+
+  .finance-receivables-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .birthday-list > div,
+  .alert-list > div {
+    grid-template-columns: 1fr;
+  }
+
+  .birthday-list > div .finance-inline-cta,
+  .alert-list > div .finance-inline-cta {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard-hero-avatar {
+    width: 7.15rem;
+    height: 7.15rem;
+    flex-basis: 7.15rem;
+    border-radius: 24px;
+  }
+
+  .registrar-events-panel {
+    min-height: 0;
+    border-radius: 10px;
+    padding: .25rem;
+  }
+
+  .registrar-events-title {
+    align-items: flex-start;
+  }
+
+  .registrar-events-title > .material-icons,
+  .registrar-events-calendar-button {
+    width: 2.85rem;
+    height: 2.85rem;
+    border-radius: 10px;
+  }
+
+  .registrar-events-full-view {
+    min-height: 2.85rem;
+    border-radius: 10px;
+    font-size: .72rem;
+  }
+
+  .registrar-event-card {
+    min-height: 0;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    border-radius: 10px;
+  }
+
+  .registrar-event-icon {
+    width: 3.7rem;
+    height: 3.7rem;
+    border-radius: 8px;
+    font-size: 2rem;
+  }
+
+  .registrar-event-content {
+    padding: .25rem;
+  }
+
+  .registrar-event-pill {
+    margin-top: .7rem;
+    font-size: .72rem;
+  }
+
+  .finance-card--metric,
+  .finance-card--assessed,
+  .finance-card--receivables,
+  .finance-card--alerts,
+  .finance-card--forecast,
+  .finance-card--birthdays {
+    grid-column: span 12;
+  }
+
+  .finance-widget {
+    padding: .95rem;
+  }
+
+  .widget-heading {
+    font-size: .64rem;
+  }
+
+  .finance-widget strong {
+    font-size: 1.3rem;
+  }
+
+  .finance-card-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+
+@keyframes dashboardHeroTyping {
+  0%, 8% { max-width: 0; }
+  42%, 72% { max-width: 30ch; }
+  92%, 100% { max-width: 0; }
+}
+
+@keyframes dashboardHeroCaret {
+  0%, 45% { opacity: 1; }
+  46%, 100% { opacity: 0; }
+}
+
+@keyframes donutSpin {
+  0% { transform: scale(0.5) rotate(-90deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.animate-donut {
+  animation: donutSpin 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.finance-dashboard-report-button {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fffb 100%);
+  color: #0f766e;
+  padding: .55rem .8rem;
+  font-size: .76rem;
+  font-weight: 950;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, .07);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.finance-dashboard-report-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #0f766e;
+  background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%);
+  box-shadow: 0 16px 28px rgba(15, 118, 110, .14);
+}
+
+.finance-dashboard-report-button:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.finance-dashboard-report-button .material-icons {
+  font-size: 1rem;
+}
