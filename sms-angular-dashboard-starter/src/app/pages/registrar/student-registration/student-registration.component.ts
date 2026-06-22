@@ -115,8 +115,8 @@ export class StudentRegistrationComponent implements OnInit {
   }
 
   onSubmit() {
-    if (!this.draft.lrn || !this.draft.firstName || !this.draft.lastName) {
-      this.showToast('Incomplete Fields', 'Please fill out required fields: LRN, First Name, Last Name', 'warning');
+    if (!this.draft.firstName || !this.draft.lastName) {
+      this.showToast('Incomplete Fields', 'Please fill out required fields: First Name, Last Name', 'warning');
       return;
     }
 
