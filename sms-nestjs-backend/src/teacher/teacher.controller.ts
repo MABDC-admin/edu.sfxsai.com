@@ -58,6 +58,12 @@ export class TeacherController {
     return this.teacherService.getPortalState(req.user ?? {});
   }
 
+  @Post('grades/bulk')
+  async bulkUpsertGrades(@Req() req: AuthenticatedRequest, @Body() body: Parameters<TeacherService['bulkUpsertGrades']>[1]) {
+    await this.teacherService.bulkUpsertGrades(this.teacherUserId(req), body);
+    return this.teacherService.getPortalState(req.user ?? {});
+  }
+
   @Post('resources')
   async createResource(@Req() req: AuthenticatedRequest, @Body() body: Parameters<TeacherService['createResource']>[1]) {
     await this.teacherService.createResource(this.teacherUserId(req), body);

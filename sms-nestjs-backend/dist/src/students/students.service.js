@@ -99,12 +99,14 @@ let StudentsService = class StudentsService {
             .from(schema.student);
         const sequence = (toNumber(currentCount) + 1).toString().padStart(3, '0');
         const studentNo = `STU-2026-${sequence}`;
+        const providedLrn = data.lrn && String(data.lrn).trim() !== '' ? data.lrn : `TBA-${crypto.randomUUID().split('-')[0].toUpperCase()}`;
         const [created] = await this.drizzle.db
             .insert(schema.student)
             .values({
             id: crypto.randomUUID(),
             studentNo,
             ...normalizedPayload,
+            lrn: providedLrn,
             lastUpdated: new Date().toISOString(),
         })
             .returning();

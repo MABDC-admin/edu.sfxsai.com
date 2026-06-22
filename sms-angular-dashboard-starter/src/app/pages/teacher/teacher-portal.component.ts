@@ -255,6 +255,9 @@ export class TeacherPortalComponent implements OnInit {
   readonly teacherInitials = computed(() => this.buildTeacherInitials(this.state().teacher.name, this.state().teacher.email));
   readonly isSavingDll = signal(false);
   readonly showDllModal = signal(false);
+  readonly bulkGradesDraft = signal<Record<string, { written: string, performance: string, exam: string }>>({});
+  readonly isSavingGrades = signal(false);
+  readonly hasUnsavedBulkGrades = computed(() => Object.keys(this.bulkGradesDraft()).length > 0);
 
   readonly dashboardSummary = computed(() =>
     buildTeacherDashboardSummary(this.state().classes, this.state().attendance, this.state().grades, this.attendanceDate()),
@@ -706,6 +709,61 @@ export class TeacherPortalComponent implements OnInit {
       key === 'performance' ? nextValue : current?.performance ?? null,
       key === 'exam' ? nextValue : current?.exam ?? null,
     );
+  }
+
+  getDraftGrade(classId: string, studentId: string, quarter: Quarter, key: 'written' | 'performance' | 'exam'): string | null {
+    const draftKey = `${classId}_${studentId}_${quarter}`;
+    const draft = this.bulkGradesDraft()[draftKey];
+    if (draft && draft[key] !== undefined && draft[key] !== '') return draft[key];
+    
+    // fallback to existing grade in state
+    const existing = this.gradeValueForClass(classId, studentId, key, quarter);
+    return existing !== null ? String(existing) : null;
+  }
+
+  updateDraftGrade(classId: string, studentId: string, quarter: Quarter, key: 'written' | 'performance' | 'exam', value: string) {
+    const draftKey = `${classId}_${studentId}_${quarter}`;
+    this.bulkGradesDraft.update(drafts => {
+      const current = drafts[draftKey] || { written: '', performance: '', exam: '' };
+      return { ...drafts, [draftKey]: { ...current, [key]: value } };
+    });
+  }
+
+  saveBulkGrades() {
+    const drafts = this.bulkGradesDraft();
+    const gradesToSave = [];
+    
+    for (const [key, values] of Object.entries(drafts)) {
+      const [classId, studentId, quarter] = key.split('_') as [string, string, Quarter];
+      
+      const existingWritten = this.gradeValueForClass(classId, studentId, 'written', quarter);
+      const existingPerf = this.gradeValueForClass(classId, studentId, 'performance', quarter);
+      const existingExam = this.gradeValueForClass(classId, studentId, 'exam', quarter);
+
+      gradesToSave.push({
+        classId,
+        studentId,
+        quarter,
+        written: values.written !== '' ? Number(values.written) : existingWritten,
+        performance: values.performance !== '' ? Number(values.performance) : existingPerf,
+        exam: values.exam !== '' ? Number(values.exam) : existingExam,
+      });
+    }
+
+    if (gradesToSave.length === 0) return;
+
+    this.isSavingGrades.set(true);
+    this.teacherStore.upsertGradesBulk(gradesToSave).subscribe({
+      next: () => {
+        this.bulkGradesDraft.set({});
+        this.isSavingGrades.set(false);
+        this.showToast('success', 'All grades saved successfully.');
+      },
+      error: () => {
+        this.isSavingGrades.set(false);
+        this.showToast('error', 'Failed to save grades.');
+      }
+    });
   }
 
   updateGrade(studentId: string, key: 'written' | 'performance' | 'exam', value: string) {

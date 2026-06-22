@@ -42,6 +42,10 @@ let TeacherController = class TeacherController {
         await this.teacherService.upsertGrade(this.teacherUserId(req), body);
         return this.teacherService.getPortalState(req.user ?? {});
     }
+    async bulkUpsertGrades(req, body) {
+        await this.teacherService.bulkUpsertGrades(this.teacherUserId(req), body);
+        return this.teacherService.getPortalState(req.user ?? {});
+    }
     async createResource(req, body) {
         await this.teacherService.createResource(this.teacherUserId(req), body);
         return this.teacherService.getPortalState(req.user ?? {});
@@ -140,6 +144,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], TeacherController.prototype, "upsertGrade", null);
+__decorate([
+    (0, common_1.Post)('grades/bulk'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], TeacherController.prototype, "bulkUpsertGrades", null);
 __decorate([
     (0, common_1.Post)('resources'),
     __param(0, (0, common_1.Req)()),

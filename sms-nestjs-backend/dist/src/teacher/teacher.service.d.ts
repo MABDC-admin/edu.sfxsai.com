@@ -124,6 +124,16 @@ export declare class TeacherService {
         performance?: number | null;
         exam?: number | null;
     }): Promise<import("pg").QueryResult<never>>;
+    bulkUpsertGrades(teacherUserId: string, body: {
+        grades: {
+            classId: string;
+            studentId: string;
+            quarter: Quarter;
+            written: number | null;
+            performance: number | null;
+            exam: number | null;
+        }[];
+    }): Promise<import("pg").QueryResult<never> | undefined>;
     createResource(teacherUserId: string, body: {
         classId?: string;
         title?: string;

@@ -64,6 +64,12 @@ export class TeacherPortalService {
     this.mutate('post', 'grades', { classId, studentId, quarter, written, performance, exam });
   }
 
+  upsertGradesBulk(grades: { classId: string; studentId: string; quarter: Quarter; written: number | null; performance: number | null; exam: number | null }[]) {
+    return this.http.post<TeacherPortalState>(`${this.apiUrl}/grades/bulk`, { grades }).pipe(
+      tap(state => this.stateSubject.next(this.normalizeState(state, this.snapshot())))
+    );
+  }
+
   addResource(classId: string, title: string, type: ResourceType, subject: string) {
     this.mutate('post', 'resources', { classId, title, type, subject });
   }

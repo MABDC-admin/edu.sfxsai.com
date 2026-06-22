@@ -290,6 +290,33 @@ let TeacherService = class TeacherService {
             set: data,
         });
     }
+    async bulkUpsertGrades(teacherUserId, body) {
+        if (!body.grades || body.grades.length === 0)
+            return;
+        const values = body.grades.map(g => ({
+            id: crypto.randomUUID(),
+            teacherUserId,
+            classId: this.requireText(g.classId, 'Class is required.'),
+            studentId: this.requireText(g.studentId, 'Student is required.'),
+            quarter: this.requireOneOf(g.quarter, ['Q1', 'Q2', 'Q3', 'Q4'], 'Quarter is invalid.'),
+            written: this.nullableScore(g.written),
+            performance: this.nullableScore(g.performance),
+            exam: this.nullableScore(g.exam),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        }));
+        return this.drizzle.db.insert(schema.teacherGradeRecord)
+            .values(values)
+            .onConflictDoUpdate({
+            target: [schema.teacherGradeRecord.teacherUserId, schema.teacherGradeRecord.classId, schema.teacherGradeRecord.studentId, schema.teacherGradeRecord.quarter],
+            set: {
+                written: (0, drizzle_orm_1.sql) `EXCLUDED.written`,
+                performance: (0, drizzle_orm_1.sql) `EXCLUDED.performance`,
+                exam: (0, drizzle_orm_1.sql) `EXCLUDED.exam`,
+                updatedAt: new Date().toISOString(),
+            },
+        });
+    }
     async createResource(teacherUserId, body) {
         return this.drizzle.db.insert(schema.teacherResource).values({
             id: crypto.randomUUID(),

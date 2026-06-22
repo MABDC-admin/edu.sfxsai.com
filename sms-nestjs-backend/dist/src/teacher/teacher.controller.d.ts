@@ -362,6 +362,93 @@ export declare class TeacherController {
             startTime: string;
         }[];
     }>;
+    bulkUpsertGrades(req: AuthenticatedRequest, body: Parameters<TeacherService['bulkUpsertGrades']>[1]): Promise<{
+        teacher: {
+            name: string;
+            email: string;
+            department: string;
+            phone: string;
+            advisoryClass: string;
+            assignedGradeLevel: string | null;
+            avatarUrl: string;
+        };
+        classes: {
+            id: string;
+            section: string;
+            subject: string;
+            schedule: string;
+            room: string;
+            studentIds: string[];
+            gradeLevel: number | undefined;
+        }[];
+        students: {
+            id: string;
+            name: string;
+            studentNo: string;
+            gradeLevel: string;
+            gender: string;
+            guardian: string;
+            contactNo: string;
+            contact: string;
+            photoUrl: string;
+        }[];
+        attendance: {
+            id: string;
+            classId: string;
+            studentId: string;
+            date: string;
+            status: string;
+            reason: string;
+        }[];
+        grades: {
+            id: string;
+            classId: string;
+            studentId: string;
+            quarter: string;
+            written: number | null;
+            performance: number | null;
+            exam: number | null;
+        }[];
+        resources: {
+            id: string;
+            classId: string;
+            title: string;
+            type: string;
+            subject: string;
+            size: string;
+            uploadedAt: string;
+        }[];
+        dlls: {
+            id: string;
+            classId: string;
+            date: string;
+            objectives: string;
+            activities: string;
+            materials: string;
+            remarks: string;
+        }[];
+        announcements: {
+            id: string;
+            audience: string;
+            title: string;
+            body: string;
+            postedAt: string;
+        }[];
+        messages: {
+            id: string;
+            thread: string;
+            sender: string;
+            audience: string;
+            message: string;
+            sentAt: string;
+        }[];
+        scheduleEntries: {
+            id: string;
+            weekday: string;
+            title: string;
+            startTime: string;
+        }[];
+    }>;
     createResource(req: AuthenticatedRequest, body: Parameters<TeacherService['createResource']>[1]): Promise<{
         teacher: {
             name: string;

@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CalendarEventsController = void 0;
 const common_1 = require("@nestjs/common");
 const calendar_events_service_1 = require("./calendar-events.service");
+const roles_decorator_1 = require("../auth/roles.decorator");
 let CalendarEventsController = class CalendarEventsController {
     service;
     constructor(service) {
@@ -39,6 +40,7 @@ let CalendarEventsController = class CalendarEventsController {
 exports.CalendarEventsController = CalendarEventsController;
 __decorate([
     (0, common_1.Post)(),
+    (0, roles_decorator_1.Roles)('ADMIN', 'REGISTRAR'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
@@ -60,6 +62,7 @@ __decorate([
 ], CalendarEventsController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Patch)(':id'),
+    (0, roles_decorator_1.Roles)('ADMIN', 'REGISTRAR'),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -68,6 +71,7 @@ __decorate([
 ], CalendarEventsController.prototype, "update", null);
 __decorate([
     (0, common_1.Delete)(':id'),
+    (0, roles_decorator_1.Roles)('ADMIN', 'REGISTRAR'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),

@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { DrizzleService } from '../drizzle/drizzle.service';
-import { eq, inArray, and, desc, asc } from 'drizzle-orm';
+import { eq, inArray, and, desc, asc, sql } from 'drizzle-orm';
 import * as schema from '../drizzle/schema';
 import * as crypto from 'crypto';
 
@@ -311,6 +311,44 @@ export class TeacherService {
       .onConflictDoUpdate({
         target: [schema.teacherGradeRecord.teacherUserId, schema.teacherGradeRecord.classId, schema.teacherGradeRecord.studentId, schema.teacherGradeRecord.quarter],
         set: data,
+      });
+  }
+
+  async bulkUpsertGrades(teacherUserId: string, body: {
+    grades: {
+      classId: string;
+      studentId: string;
+      quarter: Quarter;
+      written: number | null;
+      performance: number | null;
+      exam: number | null;
+    }[]
+  }) {
+    if (!body.grades || body.grades.length === 0) return;
+
+    const values = body.grades.map(g => ({
+      id: crypto.randomUUID(),
+      teacherUserId,
+      classId: this.requireText(g.classId, 'Class is required.'),
+      studentId: this.requireText(g.studentId, 'Student is required.'),
+      quarter: this.requireOneOf(g.quarter, ['Q1', 'Q2', 'Q3', 'Q4'], 'Quarter is invalid.'),
+      written: this.nullableScore(g.written),
+      performance: this.nullableScore(g.performance),
+      exam: this.nullableScore(g.exam),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }));
+
+    return this.drizzle.db.insert(schema.teacherGradeRecord)
+      .values(values)
+      .onConflictDoUpdate({
+        target: [schema.teacherGradeRecord.teacherUserId, schema.teacherGradeRecord.classId, schema.teacherGradeRecord.studentId, schema.teacherGradeRecord.quarter],
+        set: {
+          written: sql`EXCLUDED.written`,
+          performance: sql`EXCLUDED.performance`,
+          exam: sql`EXCLUDED.exam`,
+          updatedAt: new Date().toISOString(),
+        },
       });
   }
 
