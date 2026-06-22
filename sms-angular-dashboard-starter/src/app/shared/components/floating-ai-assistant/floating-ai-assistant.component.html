@@ -287,8 +287,8 @@
                 <button type="button" [class.active]="phoenixReaderMode === 'single'" (click)="setPhoenixReaderMode('single')" aria-label="Single page view">
                   <span class="material-icons">crop_portrait</span>
                 </button>
-                <button type="button" [class.active]="phoenixReaderMode === 'flip'" (click)="setPhoenixReaderMode('flip')" aria-label="Flip two-page view">
-                  <span class="material-icons">auto_stories</span>
+                <button type="button" [class.active]="isThumbnailsOpen" (click)="isThumbnailsOpen = !isThumbnailsOpen" aria-label="Toggle thumbnails">
+                  <span class="material-icons">view_module</span>
                 </button>
               </div>
               <button type="button" (click)="setPhoenixPage(phoenixPage - 1)" [disabled]="phoenixPage <= 1">
@@ -307,17 +307,30 @@
               </button>
             </div>
           </div>
-          <div class="ai-phoenix-annotation-tools" aria-label="Phoenix annotation tools">
-            <button type="button" [class.active]="phoenixTool === 'pointer'" (click)="setPhoenixTool('pointer')"><span class="material-icons">near_me</span> Pointer</button>
-            <button type="button" [class.active]="phoenixTool === 'pen'" (click)="setPhoenixTool('pen')"><span class="material-icons">draw</span> Pen</button>
-            <button type="button" [class.active]="phoenixTool === 'line'" (click)="setPhoenixTool('line')"><span class="material-icons">show_chart</span> Line</button>
-            <button type="button" [class.active]="phoenixTool === 'circle'" (click)="setPhoenixTool('circle')"><span class="material-icons">radio_button_unchecked</span> Circle</button>
-            <button type="button" [class.active]="phoenixTool === 'box'" (click)="setPhoenixTool('box')"><span class="material-icons">check_box_outline_blank</span> Box</button>
-            <button type="button" [class.active]="phoenixTool === 'move'" (click)="setPhoenixTool('move')"><span class="material-icons">open_with</span> Move</button>
-            <button type="button" [class.active]="phoenixTool === 'delete'" (click)="setPhoenixTool('delete')"><span class="material-icons">delete</span> Delete</button>
-            <input type="color" [(ngModel)]="phoenixAnnotationColor" aria-label="Annotation color" />
-            <input type="range" min="2" max="12" [(ngModel)]="phoenixAnnotationSize" aria-label="Annotation size" />
-          </div>
+            <div class="ai-phoenix-annotation-tools" aria-label="Phoenix annotation tools">
+              <button type="button" [class.active]="phoenixTool === 'pointer'" (click)="setPhoenixTool('pointer')"><span class="material-icons">near_me</span> Pointer</button>
+              <button type="button" [class.active]="phoenixTool === 'pen'" (click)="setPhoenixTool('pen')"><span class="material-icons">draw</span> Pen</button>
+              <button type="button" [class.active]="phoenixTool === 'line'" (click)="setPhoenixTool('line')"><span class="material-icons">show_chart</span> Line</button>
+              <button type="button" [class.active]="phoenixTool === 'circle'" (click)="setPhoenixTool('circle')"><span class="material-icons">radio_button_unchecked</span> Circle</button>
+              <button type="button" [class.active]="phoenixTool === 'box'" (click)="setPhoenixTool('box')"><span class="material-icons">check_box_outline_blank</span> Box</button>
+              <button type="button" [class.active]="phoenixTool === 'move'" (click)="setPhoenixTool('move')"><span class="material-icons">open_with</span> Move</button>
+              <button type="button" [class.active]="phoenixTool === 'delete'" (click)="setPhoenixTool('delete')"><span class="material-icons">delete</span> Delete</button>
+              <input type="color" [(ngModel)]="phoenixAnnotationColor" aria-label="Annotation color" />
+              <input type="range" min="2" max="12" [(ngModel)]="phoenixAnnotationSize" aria-label="Annotation size" />
+            </div>
+            <div class="ai-phoenix-thumbnails-strip" *ngIf="isThumbnailsOpen">
+              <button
+                *ngFor="let page of getPhoenixPagesList()"
+                type="button"
+                class="ai-phoenix-thumbnail-btn"
+                [class.active]="phoenixPage === page"
+                (click)="setPhoenixPage(page)"
+                [title]="'Page ' + page"
+              >
+                <img [src]="getPhoenixThumbnailUrl(selectedPhoenixBook, page)" loading="lazy" />
+                <span>{{ page }}</span>
+              </button>
+            </div>
           <div class="ai-phoenix-page-stage" [class.flip-view]="phoenixReaderMode === 'flip'">
             <div
               *ngFor="let page of phoenixVisiblePages()"

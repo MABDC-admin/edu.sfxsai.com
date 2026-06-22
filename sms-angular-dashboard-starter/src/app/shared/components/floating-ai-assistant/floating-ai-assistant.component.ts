@@ -67,6 +67,7 @@ export class FloatingAiAssistantComponent implements AfterViewChecked {
   imageGenerationError = '';
   isHistoryOpen = true;
   isPhoenixLoading = false;
+  isThumbnailsOpen = false;
   phoenixError = '';
   private hasLoadedPhoenix = false;
   private lastToolActionKey = '';
@@ -570,6 +571,7 @@ export class FloatingAiAssistantComponent implements AfterViewChecked {
   selectPhoenixBook(book: PhoenixBook): void {
     this.selectedPhoenixBook = book;
     this.phoenixPage = 1;
+    this.isThumbnailsOpen = false;
   }
 
   setPhoenixPage(page: number): void {
@@ -610,6 +612,11 @@ export class FloatingAiAssistantComponent implements AfterViewChecked {
 
   getPhoenixThumbnailUrl(book: PhoenixBook, page = 1): string {
     return `${this.assistant.phoenixApiBaseUrl}/api/phoenix/book/${encodeURIComponent(book.gradeId)}/${encodeURIComponent(book.slug)}/thumbnail/${encodeURIComponent(page)}.webp`;
+  }
+
+  getPhoenixPagesList(): number[] {
+    if (!this.selectedPhoenixBook?.pageCount) return [];
+    return Array.from({ length: this.selectedPhoenixBook.pageCount }, (_, i) => i + 1);
   }
 
   private markdownToHtml(content: string): string {
